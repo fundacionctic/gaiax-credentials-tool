@@ -1,0 +1,35 @@
+{
+    "@context": [
+        "https://www.w3.org/2018/credentials/v1",
+        "https://registry.gaia-x.eu/v2206/api/shape"
+    ],
+    "type": [
+        "VerifiableCredential",
+        "LegalPerson"
+    ],
+    "id": "did:web:dcerts.test.ctic.es",
+    "issuer": "did:web:dcerts.test.ctic.es",
+    "issuanceDate": "2022-11-07:17:00.000Z",
+    "credentialSubject": {
+        "id": "did:web:dcerts.test.ctic.es",
+        "gx-participant:name": "CTIC Technology Centre",
+        "gx-participant:legalName": "CTIC",
+        "gx-participant:registrationNumber": {
+            "gx-participant:registrationNumberType": "local",
+            "gx-participant:registrationNumberNumber": "G-33906637"
+        },
+        "gx-participant:headquarterAddress": {
+            "gx-participant:addressCountryCode": "ES",
+            "gx-participant:addressCode": "ES-AS",
+            "gx-participant:street-address": "C. Ada Byron, 39",
+            "gx-participant:postal-code": "33203"
+        },
+        "gx-participant:legalAddress": {
+            "gx-participant:addressCountryCode": "ES",
+            "gx-participant:addressCode": "ES-AS",
+            "gx-participant:street-address": "C. Ada Byron, 39",
+            "gx-participant:postal-code": "33203"
+        },
+        "gx-participant:termsAndConditions": "70c1d713215f95191a11d38fe2341faed27d19e083917bc8732ca4fea4976700"
+    }
+}
