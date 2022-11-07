@@ -1,7 +1,10 @@
 include .env
 export $(shell sed 's/=.*//' .env)
 
-certs:
+.env.certs:
 	./certbot-certonly.sh
 
-.PHONY: certs
+sdsigner:
+	./clone-sdsigner.sh
+
+# .PHONY: certs
