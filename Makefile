@@ -4,7 +4,7 @@ export $(shell sed 's/=.*//' .env)
 .env.certs:
 	./certbot-certonly.sh
 
-sdsigner:
+self-description-signer:
 	./clone-sdsigner.sh
 
 # .PHONY: certs

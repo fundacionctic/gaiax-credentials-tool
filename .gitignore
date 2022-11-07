@@ -1,4 +1,4 @@
 .env*
 !.env.example
 letsencrypt
-sdsigner
+self-description-signer
