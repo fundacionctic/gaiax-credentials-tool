@@ -1,14 +1,7 @@
 include .env
 export $(shell sed 's/=.*//' .env)
 
-ifneq (,$(wildcard ./.env.local))
-	include .env.local
-	export $(shell sed 's/=.*//' .env.local)
-endif
+certs:
+	./certbot-certonly.sh
 
-.DEFAULT_GOAL=up
-
-up:
-	sleep 2
-
-.PHONY: up
+.PHONY: certs
