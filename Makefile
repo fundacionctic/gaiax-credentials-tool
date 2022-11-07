@@ -1,10 +1,13 @@
 include .env
 export $(shell sed 's/=.*//' .env)
 
-.env.certs:
+certs:
 	./certbot-certonly.sh
 
 self-description-signer:
 	./clone-sdsigner.sh
 
-# .PHONY: certs
+clean:
+	sudo rm -fr letsencrypt self-description-signer certs
+
+.PHONY: clean
