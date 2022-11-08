@@ -7,11 +7,11 @@
         "VerifiableCredential",
         "LegalPerson"
     ],
-    "id": "did:web:gaiax.test.ctic.es",
-    "issuer": "did:web:gaiax.test.ctic.es",
+    "id": "did:web:ctic.es",
+    "issuer": "did:web:ctic.es",
     "issuanceDate": "2022-09-23T23:23:23.235Z",
     "credentialSubject": {
-        "id": "did:web:gaiax.test.ctic.es",
+        "id": "did:web:ctic.es",
         "gx-participant:name": "CTIC Technology Centre",
         "gx-participant:legalName": "CTIC",
         "gx-participant:registrationNumber": {

@@ -2,14 +2,18 @@
 
 set -ex
 
-: "${CERTBOT_PUBLIC_PORT:?}"
 : "${CERTBOT_EMAIL:?}"
 : "${CERTBOT_DOMAIN:?}"
 
+# The Compliance Service complains when the root is 'DST Root CA X3'
+# (what appears to be the default) instead of 'ISRG Root X1'
+
 docker run -it --rm \
-    -p ${CERTBOT_PUBLIC_PORT}:80 \
+    -p 80:80 \
     -v "$(pwd)/letsencrypt:/etc/letsencrypt" \
-    certbot/certbot certonly --standalone -n --agree-tos --email ${CERTBOT_EMAIL} -d ${CERTBOT_DOMAIN}
+    certbot/certbot \
+    --preferred-chain="ISRG Root X1" \
+    certonly --standalone -n --agree-tos --email ${CERTBOT_EMAIL} -d ${CERTBOT_DOMAIN}
 
 CERT=$(sudo cat ./letsencrypt/live/${CERTBOT_DOMAIN}/cert.pem)
 PRIVKEY=$(sudo cat ./letsencrypt/live/${CERTBOT_DOMAIN}/privkey.pem)
