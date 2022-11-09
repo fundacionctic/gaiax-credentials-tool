@@ -4,7 +4,7 @@ A simple proof of concept of the process to build and sign a Self-Description us
 
 ## Prerequisites
 
-* A Linux server that has ports 80 and 443 exposed to the Internet.
+* A Linux server that has ports 80 and 443 exposed to the Internet. You also need _sudo_ access.
 * Make.
 * Docker.
 * Git.
