@@ -14,10 +14,10 @@ A simple proof of concept of the process to build and sign a Self-Description us
 
 Create an `.env` file in the root folder that defines the following variables:
 
-| Variable | Description |
-| --- | --- |
-| `CERTBOT_DOMAIN` | The domain for which a [Let's Encrypt](https://letsencrypt.org/) certificate will be obtained. |
-| `CERTBOT_EMAIL` | The email of the domain owner. |
+| Variable                    | Description                                                                                                                                                                                                                                    |
+| --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `CERTBOT_DOMAIN`            | The domain for which a [Let's Encrypt](https://letsencrypt.org/) certificate will be obtained.                                                                                                                                                 |
+| `CERTBOT_EMAIL`             | The email of the domain owner.                                                                                                                                                                                                                 |
 | `DELTA_DAO_SDSIGNER_COMMIT` | [deltaDAO/self-description-signer](https://github.com/deltaDAO/self-description-signer) is a tool that simplifies the signing and validation of a Self-Description. This variable represents the commit hash that will be checked out locally. |
 
 Check out the `.env.example` file to see an example.
@@ -72,3 +72,7 @@ remote: Enumerating objects: 244, done.
 ```
 
 The final, validated self description will be located in `self-description-signer/output/<timestamp>_complete_LegalPerson.json`.
+
+A simplified version of this process is shown in the following diagram:
+
+![Self-Description sign process](/sd-sign-process.png)
