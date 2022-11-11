@@ -71,7 +71,11 @@ remote: Enumerating objects: 244, done.
 📁 ./output/1668009348412_complete_LegalPerson.json saved
 ```
 
-The final, validated self description will be located in `self-description-signer/output/<timestamp>_complete_LegalPerson.json`.
+The final, validated self description will be located in:
+
+```
+self-description-signer/output/<timestamp>_complete_LegalPerson.json
+```
 
 A simplified version of this process is shown in the following diagram:
 
