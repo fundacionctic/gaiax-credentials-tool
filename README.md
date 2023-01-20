@@ -1,6 +1,6 @@
 # Gaia-X Self-Descriptions
 
-A simple proof of concept of the process to build and sign a Self-Description using the [Gaia-X Compliance Service](https://gitlab.com/gaia-x/lab/compliance/gx-compliance). This has been developed in the context of the [DATA CELLAR](https://datacellarproject.eu/) Horizon Europe project.
+A simple proof of concept of the process to build and sign a Self-Description using the [Gaia-X Compliance Service](https://gitlab.com/gaia-x/lab/compliance/gx-compliance).
 
 ## Prerequisites
 
