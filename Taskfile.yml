@@ -1,0 +1,93 @@
+version: "3"
+
+vars:
+  CERTS_DIR: "{{.ROOT_DIR}}/certs"
+  CERTBOT_IMAGE: certbot/certbot:v2.6.0
+  STATIC_PATH:
+    sh: echo "{{.CERTBOT_DOMAIN}}" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-zA-Z0-9]+/-/g' | sed -E 's/^-|-$//g'
+  STATIC_DIR: "{{.ROOT_DIR}}/htdocs"
+  X5U_FILENAME: x5u.pem
+  NGINX_CONTAINER_NAME: gaiax_nginx
+  NGINX_IMAGE_TAG: 1.23
+
+env:
+  PATH_CERTIFICATE: "{{.CERTS_DIR}}/cert.pem"
+  PATH_PRIVATE_KEY: "{{.CERTS_DIR}}/privkey.pem"
+  X5U_URL: "https://{{.CERTBOT_DOMAIN}}/{{.STATIC_PATH}}/{{.X5U_FILENAME}}"
+  DID_URL: "https://{{.CERTBOT_DOMAIN}}/{{.STATIC_PATH}}"
+  DID_WEB_ID: "did:web:{{.CERTBOT_DOMAIN}}:{{.STATIC_PATH}}"
+  DID_OUTPUT_PATH: "{{.STATIC_DIR}}/{{.STATIC_PATH}}/did.json"
+
+# Create a dotenv .env file in the root folder
+# to override the default values defined in .env.default
+dotenv: [.env, .env.default]
+
+tasks:
+  check-sudo:
+    desc: Check if the user is root
+    cmds:
+      - >
+        if [ "$(id -u)" != "0" ]; then
+          echo "This task must be run as root. Please use sudo."
+          exit 1
+        fi
+
+  chown-certs:
+    desc: Change the owner of the certs folder to the current user
+    deps:
+      - check-sudo
+    cmds:
+      - chown -R $(logname):$(id -gn $(logname)) {{.CERTS_DIR}}
+
+  get-certs:
+    desc: Get the SSL certificates from Let's Encrypt
+    deps:
+      - check-sudo
+    cmds:
+      - >
+        docker run -it --rm -p 80:80 
+        -v "/etc/letsencrypt:/etc/letsencrypt" 
+        -v "/var/lib/letsencrypt:/var/lib/letsencrypt" 
+        {{.CERTBOT_IMAGE}}
+        --preferred-chain="ISRG Root X1" 
+        certonly 
+        --standalone -n --agree-tos --key-type rsa --email {{.CERTBOT_EMAIL}} -d {{.CERTBOT_DOMAIN}}
+      - mkdir -p {{.CERTS_DIR}}
+      - cp -Lr /etc/letsencrypt/live/{{.CERTBOT_DOMAIN}}/* {{.CERTS_DIR}}
+      - task: chown-certs
+
+  build-did:
+    desc: Build and write the DID document
+    cmds:
+      - mkdir -p {{.STATIC_DIR}}/{{.STATIC_PATH}}
+      - npm run build-did
+      - cp {{.CERTS_DIR}}/fullchain.pem {{.STATIC_DIR}}/{{.STATIC_PATH}}/{{.X5U_FILENAME}}
+    preconditions:
+      - sh: test -f {{.CERTS_DIR}}/fullchain.pem
+        msg: Please run the task to get the SSL certificates first
+
+  expose-did:
+    desc: Start the nginx container to expose the DID and x.509 certificate chain
+    deps:
+      - build-did
+    cmds:
+      - cmd: docker stop {{.NGINX_CONTAINER_NAME}}
+        ignore_error: true
+      - cmd: docker rm -f {{.NGINX_CONTAINER_NAME}}
+        ignore_error: true
+      - > 
+        docker run -d -p 443:443 
+        --restart unless-stopped 
+        --name {{.NGINX_CONTAINER_NAME}} 
+        -v {{.ROOT_DIR}}/ssl.conf:/etc/nginx/conf.d/ssl.conf 
+        -v {{.CERTS_DIR}}/privkey.pem:/etc/nginx/certs/key.pem 
+        -v {{.CERTS_DIR}}/fullchain.pem:/etc/nginx/certs/cert.pem 
+        -v {{.STATIC_DIR}}:/usr/share/nginx/html/ 
+        nginx:{{.NGINX_IMAGE_TAG}}
+
+  request-compliance:
+    desc: Call the Compliance API to get integrity proofs
+    deps:
+      - expose-did
+    cmds:
+      - npm run validate-compliance
