@@ -1,3 +1,5 @@
+> ⚠️ It appears that something has changed on the Gaia-X services side, which has broken compatibility with the Self-Description-Signer tool.
+
 # Gaia-X Self-Descriptions
 
 A simple proof of concept of the process to build and sign a Self-Description using the [Gaia-X Compliance Service](https://gitlab.com/gaia-x/lab/compliance/gx-compliance).
