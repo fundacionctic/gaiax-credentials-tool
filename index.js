@@ -11,195 +11,209 @@ const ALGORITHM_RSASSA_PSS = "PS256";
 const ALGORITHM_URDNA2015 = "URDNA2015";
 
 async function publicKeyMatchesCertificate(publicKeyJwk, certificatePem) {
-    try {
-        const pk = await jose.importJWK(publicKeyJwk);
-        const spki = await jose.exportSPKI(pk);
-        const x509 = await jose.importX509(certificatePem, ALGORITHM_RSASSA_PSS);
-        const spkiX509 = await jose.exportSPKI(x509);
-        return spki === spkiX509;
-    } catch (error) {
-        console.error(error);
-        throw new Error("Could not confirm X509 public key with certificate chain.")
-    }
+  try {
+    const pk = await jose.importJWK(publicKeyJwk);
+    const spki = await jose.exportSPKI(pk);
+    const x509 = await jose.importX509(certificatePem, ALGORITHM_RSASSA_PSS);
+    const spkiX509 = await jose.exportSPKI(x509);
+    return spki === spkiX509;
+  } catch (error) {
+    console.error(error);
+    throw new Error(
+      "Could not confirm X509 public key with certificate chain."
+    );
+  }
 }
 
 async function createDIDFile() {
-    const certificatePem = await fs.readFile(process.env.PATH_CERTIFICATE, { encoding: "utf8" });
-    const x509 = await jose.importX509(certificatePem, ALGORITHM_RSASSA_PSS)
-    const publicKeyJwk = await jose.exportJWK(x509);
-    publicKeyJwk.alg = ALGORITHM_RSASSA_PSS;
-    publicKeyJwk.x5u = process.env.X5U_URL;
+  const certificatePem = await fs.readFile(process.env.PATH_CERTIFICATE, {
+    encoding: "utf8",
+  });
+  const x509 = await jose.importX509(certificatePem, ALGORITHM_RSASSA_PSS);
+  const publicKeyJwk = await jose.exportJWK(x509);
+  publicKeyJwk.alg = ALGORITHM_RSASSA_PSS;
+  publicKeyJwk.x5u = process.env.X5U_URL;
 
-    // A sanity check to catch upstream errors in the Compliance API calls
-    if (!publicKeyMatchesCertificate(publicKeyJwk, certificatePem)) {
-        throw new Error("Public key does not match certificate");
-    }
+  // A sanity check to catch upstream errors in the Compliance API calls
+  if (!publicKeyMatchesCertificate(publicKeyJwk, certificatePem)) {
+    throw new Error("Public key does not match certificate");
+  }
 
-    const did = {
-        "@context": ["https://www.w3.org/ns/did/v1"],
+  const did = {
+    "@context": ["https://www.w3.org/ns/did/v1"],
+    id: process.env.DID_WEB_ID,
+    verificationMethod: [
+      {
+        "@context": "https://w3c-ccg.github.io/lds-jws2020/contexts/v1/",
         id: process.env.DID_WEB_ID,
-        verificationMethod: [
-            {
-                "@context": "https://w3c-ccg.github.io/lds-jws2020/contexts/v1/",
-                id: process.env.DID_WEB_ID,
-                type: "JsonWebKey2020",
-                publicKeyJwk,
-            },
-        ],
-        assertionMethod: [`${process.env.DID_WEB_ID}#JWK2020`],
-    };
+        type: "JsonWebKey2020",
+        publicKeyJwk,
+      },
+    ],
+    assertionMethod: [`${process.env.DID_WEB_ID}#JWK2020`],
+  };
 
-    const data = JSON.stringify(did, null, 2);
-    await fs.writeFile(process.env.DID_OUTPUT_PATH, data);
+  const data = JSON.stringify(did, null, 2);
+  await fs.writeFile(process.env.DID_OUTPUT_PATH, data);
 }
 
 function sha256(input) {
-    return crypto.createHash("sha256").update(input).digest("hex");
+  return crypto.createHash("sha256").update(input).digest("hex");
 }
 
 async function canonize(doc) {
-    return await jsonld.canonize(doc, {
-        algorithm: ALGORITHM_URDNA2015
-    });
+  return await jsonld.canonize(doc, {
+    algorithm: ALGORITHM_URDNA2015,
+  });
 }
 
 async function sign(hash) {
-    const privkeyPem = await fs.readFile(process.env.PATH_PRIVATE_KEY, { encoding: "utf8" });
+  const privkeyPem = await fs.readFile(process.env.PATH_PRIVATE_KEY, {
+    encoding: "utf8",
+  });
 
-    const rsaPrivateKey = await jose.importPKCS8(
-        privkeyPem,
-        ALGORITHM_RSASSA_PSS
-    )
+  const rsaPrivateKey = await jose.importPKCS8(
+    privkeyPem,
+    ALGORITHM_RSASSA_PSS
+  );
 
-    const jws = await new jose.CompactSign(new TextEncoder().encode(hash))
-        .setProtectedHeader({ alg: ALGORITHM_RSASSA_PSS, b64: false, crit: ["b64"] })
-        .sign(rsaPrivateKey);
+  const jws = await new jose.CompactSign(new TextEncoder().encode(hash))
+    .setProtectedHeader({
+      alg: ALGORITHM_RSASSA_PSS,
+      b64: false,
+      crit: ["b64"],
+    })
+    .sign(rsaPrivateKey);
 
-    return jws;
+  return jws;
 }
 
 async function createProof(doc) {
-    const canonized = await canonize(doc);
-    const hash = sha256(canonized);
-    const created = new Date().toISOString();
+  const canonized = await canonize(doc);
+  const hash = sha256(canonized);
+  const created = new Date().toISOString();
 
-    const proof = {
-        type: "JsonWebSignature2020",
-        created,
-        proofPurpose: "assertionMethod",
-        verificationMethod: `${process.env.DID_WEB_ID}#JWK2020`,
-        jws: await sign(hash),
-    }
+  const proof = {
+    type: "JsonWebSignature2020",
+    created,
+    proofPurpose: "assertionMethod",
+    verificationMethod: `${process.env.DID_WEB_ID}#JWK2020`,
+    jws: await sign(hash),
+  };
 
-    return proof
+  return proof;
 }
 
 async function buildParticipantVC() {
-    const issuanceDate = new Date().toISOString();
+  const issuanceDate = new Date().toISOString();
 
-    const doc = {
-        "@context": [
-            "https://www.w3.org/2018/credentials/v1",
-            "https://w3id.org/security/suites/jws-2020/v1",
-            "https://registry.lab.gaia-x.eu/development/api/trusted-shape-registry/v1/shapes/jsonld/trustframework#"
-        ],
-        "type": [
-            "VerifiableCredential"
-        ],
-        "id": process.env.DID_URL,
-        "issuer": process.env.DID_WEB_ID,
-        "issuanceDate": issuanceDate,
-        "credentialSubject": {
-            "type": "gx:LegalParticipant",
-            "gx:legalName": process.env.LEGAL_NAME,
-            "gx:legalRegistrationNumber": {
-                "id": `${process.env.DID_URL}#lrn`
-            },
-            "gx:headquarterAddress": {
-                "gx:countrySubdivisionCode": process.env.COUNTRY_SUBDIVISION_CODE
-            },
-            "gx:legalAddress": {
-                "gx:countrySubdivisionCode": process.env.COUNTRY_SUBDIVISION_CODE
-            },
-            "gx-terms-and-conditions:gaiaxTermsAndConditions": "70c1d713215f95191a11d38fe2341faed27d19e083917bc8732ca4fea4976700",
-            "id": process.env.DID_URL
-        }
-    };
+  const doc = {
+    "@context": [
+      "https://www.w3.org/2018/credentials/v1",
+      "https://w3id.org/security/suites/jws-2020/v1",
+      "https://registry.lab.gaia-x.eu/development/api/trusted-shape-registry/v1/shapes/jsonld/trustframework#",
+    ],
+    type: ["VerifiableCredential"],
+    id: process.env.DID_URL,
+    issuer: process.env.DID_WEB_ID,
+    issuanceDate: issuanceDate,
+    credentialSubject: {
+      type: "gx:LegalParticipant",
+      "gx:legalName": process.env.LEGAL_NAME,
+      "gx:legalRegistrationNumber": {
+        id: `${process.env.DID_URL}#lrn`,
+      },
+      "gx:headquarterAddress": {
+        "gx:countrySubdivisionCode": process.env.COUNTRY_SUBDIVISION_CODE,
+      },
+      "gx:legalAddress": {
+        "gx:countrySubdivisionCode": process.env.COUNTRY_SUBDIVISION_CODE,
+      },
+      "gx-terms-and-conditions:gaiaxTermsAndConditions":
+        "70c1d713215f95191a11d38fe2341faed27d19e083917bc8732ca4fea4976700",
+      id: process.env.DID_URL,
+    },
+  };
 
-    const proof = await createProof(doc);
-    Object.assign(doc, { proof });
+  const proof = await createProof(doc);
+  Object.assign(doc, { proof });
 
-    return doc;
+  return doc;
 }
 
 async function buildLegalRegistrationNumberVC() {
-    const issuanceDate = new Date().toISOString();
+  const issuanceDate = new Date().toISOString();
 
-    const doc = {
-        "@context": [
-            "https://www.w3.org/2018/credentials/v1",
-            "https://w3id.org/security/suites/jws-2020/v1"
-        ],
-        "type": "VerifiableCredential",
-        "id": `${process.env.DID_URL}#lrn`,
-        "issuer": process.env.DID_WEB_ID,
-        "issuanceDate": issuanceDate,
-        "credentialSubject": {
-            "id": `${process.env.DID_URL}#lrn`,
-            "@context": "https://registry.lab.gaia-x.eu/development/api/trusted-shape-registry/v1/shapes/jsonld/trustframework#",
-            "type": "gx:legalRegistrationNumber",
-            "gx:vatID": process.env.VAT_ID,
-            "gx:vatID-countryCode": process.env.COUNTRY_CODE
-        }
-    };
+  const doc = {
+    "@context": [
+      "https://www.w3.org/2018/credentials/v1",
+      "https://w3id.org/security/suites/jws-2020/v1",
+    ],
+    type: "VerifiableCredential",
+    id: `${process.env.DID_URL}#lrn`,
+    issuer: process.env.DID_WEB_ID,
+    issuanceDate: issuanceDate,
+    credentialSubject: {
+      id: `${process.env.DID_URL}#lrn`,
+      "@context":
+        "https://registry.lab.gaia-x.eu/development/api/trusted-shape-registry/v1/shapes/jsonld/trustframework#",
+      type: "gx:legalRegistrationNumber",
+      "gx:vatID": process.env.VAT_ID,
+      "gx:vatID-countryCode": process.env.COUNTRY_CODE,
+    },
+  };
 
-    const proof = await createProof(doc);
-    Object.assign(doc, { proof });
+  const proof = await createProof(doc);
+  Object.assign(doc, { proof });
 
-    return doc;
+  return doc;
 }
 
 async function requestCompliance() {
-    console.log(chalk.blue("Building Participant Verifiable Credential..."));
-    const vcParticipant = await buildParticipantVC();
-    console.log(chalk.cyan(JSON.stringify(vcParticipant, null, 2)));
+  console.log(chalk.blue("Building Participant Verifiable Credential..."));
+  const vcParticipant = await buildParticipantVC();
+  console.log(chalk.cyan(JSON.stringify(vcParticipant, null, 2)));
 
-    console.log(chalk.blue("Building Legal Registration Number Verifiable Credential..."));
-    const vcLRN = await buildLegalRegistrationNumberVC();
-    console.log(chalk.cyan(JSON.stringify(vcLRN, null, 2)));
+  console.log(
+    chalk.blue("Building Legal Registration Number Verifiable Credential...")
+  );
+  const vcLRN = await buildLegalRegistrationNumberVC();
+  console.log(chalk.cyan(JSON.stringify(vcLRN, null, 2)));
 
-    const verifiablePresentation = {
-        "@context": "https://www.w3.org/2018/credentials/v1",
-        "type": "VerifiablePresentation",
-        "verifiableCredential": [
-            vcParticipant,
-            vcLRN
-        ]
-    };
+  const verifiablePresentation = {
+    "@context": "https://www.w3.org/2018/credentials/v1",
+    type: "VerifiablePresentation",
+    verifiableCredential: [vcParticipant, vcLRN],
+  };
 
-    console.log(chalk.blue("Sending Verifiable Presentation to Compliance API..."));
-    console.log(chalk.blue("POST", process.env.API_COMPLIANCE_CREDENTIAL_OFFER));
+  console.log(
+    chalk.blue("Sending Verifiable Presentation to Compliance API...")
+  );
+  console.log(chalk.blue("POST", process.env.API_COMPLIANCE_CREDENTIAL_OFFER));
 
-    try {
-        const res = await axios.post(process.env.API_COMPLIANCE_CREDENTIAL_OFFER, verifiablePresentation);
-        console.log(chalk.green("✅ Compliance success"));
-        console.log(chalk.green(JSON.stringify(res.data, null, 2)));
-    } catch (err) {
-        console.error(chalk.red("🔴 Compliance error"));
-        console.error(err.response.data);
-    }
+  try {
+    const res = await axios.post(
+      process.env.API_COMPLIANCE_CREDENTIAL_OFFER,
+      verifiablePresentation
+    );
+    console.log(chalk.green("✅ Compliance success"));
+    console.log(chalk.green(JSON.stringify(res.data, null, 2)));
+  } catch (err) {
+    console.error(chalk.red("🔴 Compliance error"));
+    console.error(err.response.data);
+  }
 }
 
 async function main() {
-    const subCommand = process.argv[2];
+  const subCommand = process.argv[2];
 
-    if (subCommand === CMD_DID) {
-        await createDIDFile();
-    } else if (subCommand === CMD_VALIDATE) {
-        await requestCompliance();
-    } else {
-        console.log("Unknown command");
-    }
+  if (subCommand === CMD_DID) {
+    await createDIDFile();
+  } else if (subCommand === CMD_VALIDATE) {
+    await requestCompliance();
+  } else {
+    console.log("Unknown command");
+  }
 }
 
 main();
