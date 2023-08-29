@@ -150,14 +150,7 @@ async function buildLegalRegistrationNumberVC() {
             "type": "gx:legalRegistrationNumber",
             "gx:vatID": process.env.VAT_ID,
             "gx:vatID-countryCode": process.env.COUNTRY_CODE
-        },
-        "evidence": [
-            {
-                "gx:evidenceURL": "http://ec.europa.eu/taxation_customs/vies/services/checkVatService",
-                "gx:executionDate": "2023-07-12T09:05:00.819Z",
-                "gx:evidenceOf": "gx:vatID"
-            }
-        ]
+        }
     };
 
     const proof = await createProof(doc);
