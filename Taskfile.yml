@@ -62,6 +62,10 @@ tasks:
       - mkdir -p {{.STATIC_DIR}}/{{.STATIC_PATH}}
       - npm run build-did
       - cp {{.CERTS_DIR}}/fullchain.pem {{.STATIC_DIR}}/{{.STATIC_PATH}}/{{.X5U_FILENAME}}
+      # We need to add the root certificate to the chain for the Compliance request to work
+      # Note that we indicated that we want to use the "ISRG Root X1" root using the preferred-chain option
+      - wget https://letsencrypt.org/certs/isrgrootx1.pem -O {{.CERTS_DIR}}/isrgrootx1.pem
+      - cat {{.CERTS_DIR}}/isrgrootx1.pem >> {{.STATIC_DIR}}/{{.STATIC_PATH}}/{{.X5U_FILENAME}}
     preconditions:
       - sh: test -f {{.CERTS_DIR}}/fullchain.pem
         msg: Please run the task to get the SSL certificates first

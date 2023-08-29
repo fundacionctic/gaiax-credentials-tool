@@ -17,9 +17,10 @@ First you need to update the configuration to match your environment. Copy the f
 * `CERTBOT_DOMAIN`: The domain name of your server for which you want to generate the Let's Encrypt certificate.
 * `CERTBOT_EMAIL`: The email of the owner of the domain name.
 
-Then, request the certificates with the following command:
+Then, install the dependencies and request the certificates with the following commands:
 
 ```console
+$ npm install
 $ sudo task get-certs
 ```
 
