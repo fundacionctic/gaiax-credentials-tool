@@ -4,7 +4,136 @@ A simple proof of concept of the process to build and sign a Self-Description us
 
 ## Prerequisites
 
-* A Linux server that has ports 80 and 443 exposed to the Internet. You also need _sudo_ access.
-* Docker.
-* Git.
+* A Linux server with _sudo_ access that has ports 80 and 443 exposed to the Internet.
 * A public DNS domain that points to the IP address of the previous Linux server.
+* Docker.
+* [Node 18+](https://nodejs.org/en/download/package-manager).
+* [Taskfile](https://taskfile.dev/installation/).
+
+## Usage
+
+First you need to update the configuration to match your environment. Copy the file `.env.default` to `.env` and, at least, update the following variables:
+
+* `CERTBOT_DOMAIN`: The domain name of your server for which you want to generate the Let's Encrypt certificate.
+* `CERTBOT_EMAIL`: The email of the owner of the domain name.
+
+Then, request the certificates with the following command:
+
+```console
+$ sudo task get-certs
+```
+
+This will generate the certificates and store them in the `certs` folder. You can now build the Verifiable Credentials of your _Participant_ and  _Legal Registration Number_ and submit the resulting Verifiable Presentation to the Compliance API:
+
+```console
+$ task request-compliance
+
+[...]
+
+Building Participant Verifiable Credential...
+{
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1",
+    "https://w3id.org/security/suites/jws-2020/v1",
+    "https://registry.lab.gaia-x.eu/development/api/trusted-shape-registry/v1/shapes/jsonld/trustframework#"
+  ],
+  "type": [
+    "VerifiableCredential"
+  ],
+  "id": "https://gaiaxsd.cticpoc.com/gaiaxsd-cticpoc-com",
+  "issuer": "did:web:gaiaxsd.cticpoc.com:gaiaxsd-cticpoc-com",
+  "issuanceDate": "2023-08-29T09:46:12.529Z",
+  "credentialSubject": {
+    "type": "gx:LegalParticipant",
+    "gx:legalName": "CTIC Technology Centre",
+    "gx:legalRegistrationNumber": {
+      "id": "https://gaiaxsd.cticpoc.com/gaiaxsd-cticpoc-com#lrn"
+    },
+    "gx:headquarterAddress": {
+      "gx:countrySubdivisionCode": "ES-AS"
+    },
+    "gx:legalAddress": {
+      "gx:countrySubdivisionCode": "ES-AS"
+    },
+    "gx-terms-and-conditions:gaiaxTermsAndConditions": "70c1d713215f95191a11d38fe2341faed27d19e083917bc8732ca4fea4976700",
+    "id": "https://gaiaxsd.cticpoc.com/gaiaxsd-cticpoc-com"
+  },
+  "proof": {
+    "type": "JsonWebSignature2020",
+    "created": "2023-08-29T09:46:13.444Z",
+    "proofPurpose": "assertionMethod",
+    "verificationMethod": "did:web:gaiaxsd.cticpoc.com:gaiaxsd-cticpoc-com#JWK2020",
+    "jws": "eyJhbGciOiJQUzI1NiIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..XS7YtcnNCxsoW2B6iFsd_PuIdOyQEzVn4uq7-I6Jb6AKOa2zchEteRPhaUEKcVHiAkCUd5ZbzYQu1kAQgX3HJ06HjQVad9MIec0fGvBq19-2_aM9TQEf4ohX8AVdEaxm8SRm4gBEr25kU2OYb49fpaFzNZqcDUPHqc2NonxjRkU9gdTAFQEuOMe7Wk202cPd9kypHB3Jw_Fma5SN_gJ7ekyBgPhuombsNWjFxN7wNe6sNlU_ZmZAK0XkQrR-b4BtPH8hGjCdtjzJXONIYp_oaCn6_ugQFDEuEn0-RYTlbOJJmYkFG6oE6JbPM0-nap4INJv0rKuWGIDvKc679pNOmg"
+  }
+}
+Building Legal Registration Number Verifiable Credential...
+{
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1",
+    "https://w3id.org/security/suites/jws-2020/v1"
+  ],
+  "type": "VerifiableCredential",
+  "id": "https://gaiaxsd.cticpoc.com/gaiaxsd-cticpoc-com#lrn",
+  "issuer": "did:web:gaiaxsd.cticpoc.com:gaiaxsd-cticpoc-com",
+  "issuanceDate": "2023-08-29T09:46:13.450Z",
+  "credentialSubject": {
+    "id": "https://gaiaxsd.cticpoc.com/gaiaxsd-cticpoc-com#lrn",
+    "@context": "https://registry.lab.gaia-x.eu/development/api/trusted-shape-registry/v1/shapes/jsonld/trustframework#",
+    "type": "gx:legalRegistrationNumber",
+    "gx:vatID": "ESX1234567X",
+    "gx:vatID-countryCode": "ES"
+  },
+  "evidence": [
+    {
+      "gx:evidenceURL": "http://ec.europa.eu/taxation_customs/vies/services/checkVatService",
+      "gx:executionDate": "2023-07-12T09:05:00.819Z",
+      "gx:evidenceOf": "gx:vatID"
+    }
+  ],
+  "proof": {
+    "type": "JsonWebSignature2020",
+    "created": "2023-08-29T09:46:14.100Z",
+    "proofPurpose": "assertionMethod",
+    "verificationMethod": "did:web:gaiaxsd.cticpoc.com:gaiaxsd-cticpoc-com#JWK2020",
+    "jws": "eyJhbGciOiJQUzI1NiIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..GtXh_Zb1DQhYqxdy16dM2EFv67dOVIlb9YH5eEJj2-bxNa_hnCC-avIHFtcvpliJh1PtSyTxkvxqp3so63tScE3fs3yxAF5sYGINblaT9-rMmJeGW34FKQ0s9usUo7-aCkbB1NR98bjyE6_CXprnLmGHthmmT76SpZMLgfF_ezj1hZmZAKKzIB0ZZuXKaPMEn5bI6WzeByr9nR1EDD5KVfNrPhsKbBf8kzmIs5dxvWYe0pwnmxWIe85K8sY2m4aOoGNm0ifnE11JODAxyfVqy3Aook1lBx0WBElffwdWofKFV23qhinKTOiNNI0GO1lHdJlohPMOoDgRtz2le5K50g"
+  }
+}
+Sending Verifiable Presentation to Compliance API...
+POST https://compliance.lab.gaia-x.eu/main/api/credential-offers
+✅ Compliance success
+{
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1",
+    "https://w3id.org/security/suites/jws-2020/v1",
+    "https://registry.lab.gaia-x.eu/development/api/trusted-shape-registry/v1/shapes/jsonld/trustframework#"
+  ],
+  "type": [
+    "VerifiableCredential"
+  ],
+  "id": "https://compliance.lab.gaia-x.eu/main/credential-offers/7dd2cb68-b8ca-4a6c-8de3-c824b67db00e",
+  "issuer": "did:web:compliance.lab.gaia-x.eu:main",
+  "issuanceDate": "2023-08-29T09:46:17.948Z",
+  "expirationDate": "2023-11-27T09:46:17.948Z",
+  "credentialSubject": [
+    {
+      "type": "gx:compliance",
+      "id": "https://gaiaxsd.cticpoc.com/gaiaxsd-cticpoc-com",
+      "gx:integrity": "sha256-cce025e1fdeb249c3faa9a898d14d4dc6e3c7095a1409ed7edac62e5a20bd9bb",
+      "gx:version": "22.10"
+    },
+    {
+      "type": "gx:compliance",
+      "id": "https://gaiaxsd.cticpoc.com/gaiaxsd-cticpoc-com#lrn",
+      "gx:integrity": "sha256-e62cf6a91e0398c07f893d98621905975a941a3518a25b740a8a0a5de3aad3fa",
+      "gx:version": "22.10"
+    }
+  ],
+  "proof": {
+    "type": "JsonWebSignature2020",
+    "created": "2023-08-29T09:46:18.326Z",
+    "proofPurpose": "assertionMethod",
+    "jws": "eyJhbGciOiJQUzI1NiIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..Jp4JGeohl977ovc9wGlZatYCWsatUQS3Bma_SnE_Q20fz-k1w7Hpiar2EEiZouI8e1Ibsq-BQDWwWe3xK08GfjATZa81USJW9hILbGW6eXv-hNtvd5hjCbmkrvud_aCdfexGbY-M14p5v1bJ6uaI4h52U0KDVKUlOTukEZFgwEZ_hxInhnAqWak8tI1Mm1vhS6B3hkEOmmcP816JVQddsUnEltAoLEEFtrO2MkdXdstGLTo3aNMuug8lE2ijwzCxh25Gnbg1HP8HVGYQqzDrQOr4P26gWXn5GFYdDIM7D2QnRhi6dpTNdeb8wNfhohQUBgbkDIlnfBs4XNmPnVViFA",
+    "verificationMethod": "did:web:compliance.lab.gaia-x.eu:main#X509-JWK2020"
+  }
+}
+```
