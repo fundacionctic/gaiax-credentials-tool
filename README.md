@@ -145,7 +145,7 @@ POST https://compliance.lab.gaia-x.eu/main/api/credential-offers
 
 | Reference | Description |
 | --- | --- |
-| [Gaia-X Lab Registry public API](https://registry.lab.gaia-x.eu/main/docs) | A public deployment of the [Gaia-X Registry of Trust Anchors](https://gitlab.com/gaia-x/lab/compliance/gx-registry) that can be used for development purposes. |
+| [Gaia-X Lab Registry API](https://registry.lab.gaia-x.eu/main/docs) | A public deployment of the [Gaia-X Registry of Trust Anchors](https://gitlab.com/gaia-x/lab/compliance/gx-registry) that can be used for development purposes. |
 | [Gaia-X Lab Compliance API](https://compliance.lab.gaia-x.eu/main/docs/) | A public deployment of the [Gaia-X Compliance Service](https://gitlab.com/gaia-x/lab/compliance/gx-compliance) that can be used for development purposes. |
 | [Gaia-X GitLab](https://gitlab.com/gaia-x) | A GitLab organization that contains the repositories for the software implementations and documentation materials of Gaia-X. | 1
 | [Gaia-X Wizard](https://wizard.lab.gaia-x.eu/) | A user-friendly web application for creating Gaia-X credentials (i.e., self-descriptions). This is invaluable for educational purposes and for gaining insight into the concepts of Gaia-X. |
