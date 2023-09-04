@@ -7,6 +7,8 @@ vars:
     sh: echo "{{.CERTBOT_DOMAIN}}" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-zA-Z0-9]+/-/g' | sed -E 's/^-|-$//g'
   STATIC_DIR: "{{.ROOT_DIR}}/htdocs"
   X5U_FILENAME: x5u.pem
+  DID_FILENAME: did.json
+  VP_FILENAME: vp.json
   NGINX_CONTAINER_NAME: gaiax_nginx
   NGINX_IMAGE_TAG: 1.23
 
@@ -16,7 +18,8 @@ env:
   X5U_URL: "https://{{.CERTBOT_DOMAIN}}/{{.STATIC_PATH}}/{{.X5U_FILENAME}}"
   DID_URL: "https://{{.CERTBOT_DOMAIN}}/{{.STATIC_PATH}}"
   DID_WEB_ID: "did:web:{{.CERTBOT_DOMAIN}}:{{.STATIC_PATH}}"
-  DID_OUTPUT_PATH: "{{.STATIC_DIR}}/{{.STATIC_PATH}}/did.json"
+  DID_OUTPUT_PATH: "{{.STATIC_DIR}}/{{.STATIC_PATH}}/{{.DID_FILENAME}}"
+  VP_OUTPUT_PATH: "{{.STATIC_DIR}}/{{.STATIC_PATH}}/{{.VP_FILENAME}}"
 
 # Create a dotenv .env file in the root folder
 # to override the default values defined in .env.default
@@ -57,7 +60,7 @@ tasks:
       - task: chown-certs
 
   build-did:
-    desc: Build and write the DID document
+    desc: Build and write the DID and x.509 certificate chain
     cmds:
       - mkdir -p {{.STATIC_DIR}}/{{.STATIC_PATH}}
       - npm run build-did
@@ -70,11 +73,10 @@ tasks:
       - sh: test -f {{.CERTS_DIR}}/fullchain.pem
         msg: Please run the task to get the SSL certificates first
 
-  expose-did:
-    desc: Start the nginx container to expose the DID and x.509 certificate chain
-    deps:
-      - build-did
+  start-webserver:
+    desc: Build the DID and x.509 certificate chain and then start the NGINX web server
     cmds:
+      - task: build-did
       - cmd: docker stop {{.NGINX_CONTAINER_NAME}}
         ignore_error: true
       - cmd: docker rm -f {{.NGINX_CONTAINER_NAME}}
@@ -92,6 +94,6 @@ tasks:
   request-compliance:
     desc: Call the Compliance API to get integrity proofs
     deps:
-      - expose-did
+      - start-webserver
     cmds:
       - npm run validate-compliance

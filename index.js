@@ -104,6 +104,22 @@ async function createProof(doc) {
   return proof;
 }
 
+function getIssuer() {
+  return process.env.DID_WEB_ID;
+}
+
+function getParticipantId() {
+  return `${process.env.DID_URL}`;
+}
+
+function getLegalRegistrationNumberId() {
+  return `${process.env.DID_URL}#lrn`;
+}
+
+function getTermsConditionsId() {
+  return `${process.env.DID_URL}#tsandcs`;
+}
+
 async function buildParticipantVC() {
   const issuanceDate = new Date().toISOString();
 
@@ -114,14 +130,14 @@ async function buildParticipantVC() {
       "https://registry.lab.gaia-x.eu/development/api/trusted-shape-registry/v1/shapes/jsonld/trustframework#",
     ],
     type: ["VerifiableCredential"],
-    id: process.env.DID_URL,
-    issuer: process.env.DID_WEB_ID,
+    id: getParticipantId(),
+    issuer: getIssuer(),
     issuanceDate: issuanceDate,
     credentialSubject: {
       type: "gx:LegalParticipant",
       "gx:legalName": process.env.LEGAL_NAME,
       "gx:legalRegistrationNumber": {
-        id: `${process.env.DID_URL}#lrn`,
+        id: getLegalRegistrationNumberId(),
       },
       "gx:headquarterAddress": {
         "gx:countrySubdivisionCode": process.env.COUNTRY_SUBDIVISION_CODE,
@@ -129,9 +145,8 @@ async function buildParticipantVC() {
       "gx:legalAddress": {
         "gx:countrySubdivisionCode": process.env.COUNTRY_SUBDIVISION_CODE,
       },
-      "gx-terms-and-conditions:gaiaxTermsAndConditions":
-        "70c1d713215f95191a11d38fe2341faed27d19e083917bc8732ca4fea4976700",
-      id: process.env.DID_URL,
+      "gx-terms-and-conditions:gaiaxTermsAndConditions": getTermsConditionsId(),
+      id: getParticipantId(),
     },
   };
 
@@ -150,11 +165,11 @@ async function buildLegalRegistrationNumberVC() {
       "https://w3id.org/security/suites/jws-2020/v1",
     ],
     type: "VerifiableCredential",
-    id: `${process.env.DID_URL}#lrn`,
-    issuer: process.env.DID_WEB_ID,
+    id: getLegalRegistrationNumberId(),
+    issuer: getIssuer(),
     issuanceDate: issuanceDate,
     credentialSubject: {
-      id: `${process.env.DID_URL}#lrn`,
+      id: getLegalRegistrationNumberId(),
       "@context":
         "https://registry.lab.gaia-x.eu/development/api/trusted-shape-registry/v1/shapes/jsonld/trustframework#",
       type: "gx:legalRegistrationNumber",
@@ -169,25 +184,73 @@ async function buildLegalRegistrationNumberVC() {
   return doc;
 }
 
+async function buildTermsConditionsVC() {
+  const issuanceDate = new Date().toISOString();
+
+  const termsAndConditions =
+    "The PARTICIPANT signing the Self-Description agrees as follows:\n- " +
+    "to update its descriptions about any changes, " +
+    "be it technical, organizational, or legal - " +
+    "especially but not limited to contractual in regards to " +
+    "the indicated attributes present in the descriptions.\n\n" +
+    "The keypair used to sign Verifiable Credentials will be revoked " +
+    "where Gaia-X Association becomes aware of any inaccurate statements " +
+    "in regards to the claims which result in a non-compliance " +
+    "with the Trust Framework and policy rules defined " +
+    "in the Policy Rules and Labelling Document (PRLD).";
+
+  const doc = {
+    "@context": [
+      "https://www.w3.org/2018/credentials/v1",
+      "https://w3id.org/security/suites/jws-2020/v1",
+      "https://registry.lab.gaia-x.eu/development/api/trusted-shape-registry/v1/shapes/jsonld/trustframework#",
+    ],
+    type: "VerifiableCredential",
+    id: getTermsConditionsId(),
+    issuer: getIssuer(),
+    issuanceDate: issuanceDate,
+    credentialSubject: {
+      "@context":
+        "https://registry.lab.gaia-x.eu/development/api/trusted-shape-registry/v1/shapes/jsonld/trustframework#",
+      type: "gx:GaiaXTermsAndConditions",
+      id: getTermsConditionsId(),
+      "gx:termsAndConditions": termsAndConditions,
+    },
+  };
+
+  const proof = await createProof(doc);
+  Object.assign(doc, { proof });
+
+  return doc;
+}
+
 async function requestCompliance() {
-  console.log(chalk.blue("Building Participant Verifiable Credential..."));
+  console.log(chalk.blue("Building Participant Verifiable Credential"));
   const vcParticipant = await buildParticipantVC();
   console.log(chalk.cyan(JSON.stringify(vcParticipant, null, 2)));
 
   console.log(
-    chalk.blue("Building Legal Registration Number Verifiable Credential...")
+    chalk.blue("Building Legal Registration Number Verifiable Credential")
   );
+
   const vcLRN = await buildLegalRegistrationNumberVC();
   console.log(chalk.cyan(JSON.stringify(vcLRN, null, 2)));
+
+  console.log(
+    chalk.blue("Building Terms and Conditions Verifiable Credential")
+  );
+
+  const vcTC = await buildTermsConditionsVC();
+  console.log(chalk.cyan(JSON.stringify(vcTC, null, 2)));
 
   const verifiablePresentation = {
     "@context": "https://www.w3.org/2018/credentials/v1",
     type: "VerifiablePresentation",
-    verifiableCredential: [vcParticipant, vcLRN],
+    verifiableCredential: [vcParticipant, vcLRN, vcTC],
   };
 
   console.log(
-    chalk.blue("Sending Verifiable Presentation to Compliance API...")
+    chalk.blue("Sending Verifiable Presentation to Compliance API")
   );
   console.log(chalk.blue("POST", process.env.API_COMPLIANCE_CREDENTIAL_OFFER));
 
@@ -196,8 +259,22 @@ async function requestCompliance() {
       process.env.API_COMPLIANCE_CREDENTIAL_OFFER,
       verifiablePresentation
     );
+
     console.log(chalk.green("✅ Compliance success"));
     console.log(chalk.green(JSON.stringify(res.data, null, 2)));
+
+    Object.assign(verifiablePresentation, {
+      verifiableCredential: [vcParticipant, vcLRN, vcTC, res.data],
+    });
+
+    console.log(
+      chalk.blue(
+        `Writing resulting Verifiable Presentation to ${process.env.VP_OUTPUT_PATH}`
+      )
+    );
+
+    const vpData = JSON.stringify(verifiablePresentation, null, 2);
+    await fs.writeFile(process.env.VP_OUTPUT_PATH, vpData);
   } catch (err) {
     console.error(chalk.red("🔴 Compliance error"));
     console.error(err.response.data);
