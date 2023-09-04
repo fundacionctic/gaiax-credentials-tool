@@ -4,6 +4,7 @@ const jsonld = require("jsonld");
 const crypto = require("node:crypto");
 const axios = require("axios");
 const chalk = require("chalk");
+const path = require("node:path");
 
 const CMD_DID = "did";
 const CMD_VALIDATE = "validate";
@@ -25,14 +26,40 @@ async function publicKeyMatchesCertificate(publicKeyJwk, certificatePem) {
   }
 }
 
+async function writeFile(filePath, obj) {
+  const data = JSON.stringify(obj, null, 2);
+  await fs.writeFile(filePath, data);
+}
+
+function joinUrl(...parts) {
+  return parts.map((item) => item.trimEnd("/")).join("/");
+}
+
+function getIssuerDID() {
+  return process.env.DID_WEB_ID;
+}
+
+function getParticipantUrl() {
+  return joinUrl(process.env.BASE_URL, process.env.FILENAME_PARTICIPANT);
+}
+
+function getLegalRegistrationNumberUrl() {
+  return joinUrl(process.env.BASE_URL, process.env.FILENAME_LRN);
+}
+
+function getTermsConditionsUrl() {
+  return joinUrl(process.env.BASE_URL, process.env.FILENAME_TC);
+}
+
 async function createDIDFile() {
   const certificatePem = await fs.readFile(process.env.PATH_CERTIFICATE, {
     encoding: "utf8",
   });
+
   const x509 = await jose.importX509(certificatePem, ALGORITHM_RSASSA_PSS);
   const publicKeyJwk = await jose.exportJWK(x509);
   publicKeyJwk.alg = ALGORITHM_RSASSA_PSS;
-  publicKeyJwk.x5u = process.env.X5U_URL;
+  publicKeyJwk.x5u = joinUrl(process.env.BASE_URL, process.env.FILENAME_X5U);
 
   // A sanity check to catch upstream errors in the Compliance API calls
   if (!publicKeyMatchesCertificate(publicKeyJwk, certificatePem)) {
@@ -53,8 +80,12 @@ async function createDIDFile() {
     assertionMethod: [`${process.env.DID_WEB_ID}#JWK2020`],
   };
 
-  const data = JSON.stringify(did, null, 2);
-  await fs.writeFile(process.env.DID_OUTPUT_PATH, data);
+  const filePath = path.join(
+    process.env.WEBSERVER_DIR,
+    process.env.FILENAME_DID
+  );
+
+  await writeFile(filePath, did);
 }
 
 function sha256(input) {
@@ -104,22 +135,6 @@ async function createProof(doc) {
   return proof;
 }
 
-function getIssuer() {
-  return process.env.DID_WEB_ID;
-}
-
-function getParticipantId() {
-  return `${process.env.DID_URL}`;
-}
-
-function getLegalRegistrationNumberId() {
-  return `${process.env.DID_URL}#lrn`;
-}
-
-function getTermsConditionsId() {
-  return `${process.env.DID_URL}#tsandcs`;
-}
-
 async function buildParticipantVC() {
   const issuanceDate = new Date().toISOString();
 
@@ -130,14 +145,14 @@ async function buildParticipantVC() {
       "https://registry.lab.gaia-x.eu/development/api/trusted-shape-registry/v1/shapes/jsonld/trustframework#",
     ],
     type: ["VerifiableCredential"],
-    id: getParticipantId(),
-    issuer: getIssuer(),
+    id: getParticipantUrl(),
+    issuer: getIssuerDID(),
     issuanceDate: issuanceDate,
     credentialSubject: {
       type: "gx:LegalParticipant",
       "gx:legalName": process.env.LEGAL_NAME,
       "gx:legalRegistrationNumber": {
-        id: getLegalRegistrationNumberId(),
+        id: getLegalRegistrationNumberUrl(),
       },
       "gx:headquarterAddress": {
         "gx:countrySubdivisionCode": process.env.COUNTRY_SUBDIVISION_CODE,
@@ -145,13 +160,20 @@ async function buildParticipantVC() {
       "gx:legalAddress": {
         "gx:countrySubdivisionCode": process.env.COUNTRY_SUBDIVISION_CODE,
       },
-      "gx-terms-and-conditions:gaiaxTermsAndConditions": getTermsConditionsId(),
-      id: getParticipantId(),
+      "gx-terms-and-conditions:gaiaxTermsAndConditions":
+        getTermsConditionsUrl(),
+      id: getParticipantUrl(),
     },
   };
 
   const proof = await createProof(doc);
   Object.assign(doc, { proof });
+
+  const filePath = path.join(
+    process.env.WEBSERVER_DIR,
+    process.env.FILENAME_PARTICIPANT
+  );
+  await writeFile(filePath, doc);
 
   return doc;
 }
@@ -165,11 +187,11 @@ async function buildLegalRegistrationNumberVC() {
       "https://w3id.org/security/suites/jws-2020/v1",
     ],
     type: "VerifiableCredential",
-    id: getLegalRegistrationNumberId(),
-    issuer: getIssuer(),
+    id: getLegalRegistrationNumberUrl(),
+    issuer: getIssuerDID(),
     issuanceDate: issuanceDate,
     credentialSubject: {
-      id: getLegalRegistrationNumberId(),
+      id: getLegalRegistrationNumberUrl(),
       "@context":
         "https://registry.lab.gaia-x.eu/development/api/trusted-shape-registry/v1/shapes/jsonld/trustframework#",
       type: "gx:legalRegistrationNumber",
@@ -180,6 +202,12 @@ async function buildLegalRegistrationNumberVC() {
 
   const proof = await createProof(doc);
   Object.assign(doc, { proof });
+
+  const filePath = path.join(
+    process.env.WEBSERVER_DIR,
+    process.env.FILENAME_LRN
+  );
+  await writeFile(filePath, doc);
 
   return doc;
 }
@@ -206,14 +234,14 @@ async function buildTermsConditionsVC() {
       "https://registry.lab.gaia-x.eu/development/api/trusted-shape-registry/v1/shapes/jsonld/trustframework#",
     ],
     type: "VerifiableCredential",
-    id: getTermsConditionsId(),
-    issuer: getIssuer(),
+    id: getTermsConditionsUrl(),
+    issuer: getIssuerDID(),
     issuanceDate: issuanceDate,
     credentialSubject: {
       "@context":
         "https://registry.lab.gaia-x.eu/development/api/trusted-shape-registry/v1/shapes/jsonld/trustframework#",
       type: "gx:GaiaXTermsAndConditions",
-      id: getTermsConditionsId(),
+      id: getTermsConditionsUrl(),
       "gx:termsAndConditions": termsAndConditions,
     },
   };
@@ -221,27 +249,27 @@ async function buildTermsConditionsVC() {
   const proof = await createProof(doc);
   Object.assign(doc, { proof });
 
+  const filePath = path.join(
+    process.env.WEBSERVER_DIR,
+    process.env.FILENAME_TC
+  );
+  await writeFile(filePath, doc);
+
   return doc;
 }
 
 async function requestCompliance() {
-  console.log(chalk.blue("Building Participant Verifiable Credential"));
+  console.log("Building Participant Verifiable Credential");
   const vcParticipant = await buildParticipantVC();
-  console.log(chalk.cyan(JSON.stringify(vcParticipant, null, 2)));
+  console.log(vcParticipant);
 
-  console.log(
-    chalk.blue("Building Legal Registration Number Verifiable Credential")
-  );
-
+  console.log("Building Legal Registration Number Verifiable Credential");
   const vcLRN = await buildLegalRegistrationNumberVC();
-  console.log(chalk.cyan(JSON.stringify(vcLRN, null, 2)));
+  console.log(vcLRN);
 
-  console.log(
-    chalk.blue("Building Terms and Conditions Verifiable Credential")
-  );
-
+  console.log("Building Terms and Conditions Verifiable Credential");
   const vcTC = await buildTermsConditionsVC();
-  console.log(chalk.cyan(JSON.stringify(vcTC, null, 2)));
+  console.log(vcTC);
 
   const verifiablePresentation = {
     "@context": "https://www.w3.org/2018/credentials/v1",
@@ -249,10 +277,9 @@ async function requestCompliance() {
     verifiableCredential: [vcParticipant, vcLRN, vcTC],
   };
 
-  console.log(
-    chalk.blue("Sending Verifiable Presentation to Compliance API")
-  );
-  console.log(chalk.blue("POST", process.env.API_COMPLIANCE_CREDENTIAL_OFFER));
+  console.log("Sending Verifiable Presentation to Compliance API");
+  console.log(`POST -> ${process.env.API_COMPLIANCE_CREDENTIAL_OFFER}`);
+  console.log(verifiablePresentation);
 
   try {
     const res = await axios.post(
@@ -261,20 +288,20 @@ async function requestCompliance() {
     );
 
     console.log(chalk.green("✅ Compliance success"));
-    console.log(chalk.green(JSON.stringify(res.data, null, 2)));
+    console.log(res.data);
 
     Object.assign(verifiablePresentation, {
       verifiableCredential: [vcParticipant, vcLRN, vcTC, res.data],
     });
 
-    console.log(
-      chalk.blue(
-        `Writing resulting Verifiable Presentation to ${process.env.VP_OUTPUT_PATH}`
-      )
+    const filePath = path.join(
+      process.env.WEBSERVER_DIR,
+      process.env.FILENAME_VP
     );
 
-    const vpData = JSON.stringify(verifiablePresentation, null, 2);
-    await fs.writeFile(process.env.VP_OUTPUT_PATH, vpData);
+    console.log(`Writing resulting Verifiable Presentation to ${filePath}`);
+
+    await writeFile(filePath, verifiablePresentation);
   } catch (err) {
     console.error(chalk.red("🔴 Compliance error"));
     console.error(err.response.data);

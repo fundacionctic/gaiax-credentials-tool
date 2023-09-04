@@ -5,21 +5,28 @@ vars:
   CERTBOT_IMAGE: certbot/certbot:v2.6.0
   STATIC_PATH:
     sh: echo "{{.CERTBOT_DOMAIN}}" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-zA-Z0-9]+/-/g' | sed -E 's/^-|-$//g'
-  STATIC_DIR: "{{.ROOT_DIR}}/htdocs"
-  X5U_FILENAME: x5u.pem
-  DID_FILENAME: did.json
-  VP_FILENAME: vp.json
+  STATIC_ROOT: "{{.ROOT_DIR}}/htdocs"
   NGINX_CONTAINER_NAME: gaiax_nginx
   NGINX_IMAGE_TAG: 1.23
+  FILENAME_X5U: x5u.pem
+  FILENAME_DID: did.json
+  FILENAME_VP: vp.json
+  FILENAME_LRN: lrn.json
+  FILENAME_TC: tsandcs.json
+  FILENAME_PARTICIPANT: participant.json
 
 env:
   PATH_CERTIFICATE: "{{.CERTS_DIR}}/cert.pem"
   PATH_PRIVATE_KEY: "{{.CERTS_DIR}}/privkey.pem"
-  X5U_URL: "https://{{.CERTBOT_DOMAIN}}/{{.STATIC_PATH}}/{{.X5U_FILENAME}}"
-  DID_URL: "https://{{.CERTBOT_DOMAIN}}/{{.STATIC_PATH}}"
+  BASE_URL: "https://{{.CERTBOT_DOMAIN}}/{{.STATIC_PATH}}"
+  WEBSERVER_DIR: "{{.STATIC_ROOT}}/{{.STATIC_PATH}}"
   DID_WEB_ID: "did:web:{{.CERTBOT_DOMAIN}}:{{.STATIC_PATH}}"
-  DID_OUTPUT_PATH: "{{.STATIC_DIR}}/{{.STATIC_PATH}}/{{.DID_FILENAME}}"
-  VP_OUTPUT_PATH: "{{.STATIC_DIR}}/{{.STATIC_PATH}}/{{.VP_FILENAME}}"
+  FILENAME_X5U: "{{.FILENAME_X5U}}"
+  FILENAME_DID: "{{.FILENAME_DID}}"
+  FILENAME_VP: "{{.FILENAME_VP}}"
+  FILENAME_LRN: "{{.FILENAME_LRN}}"
+  FILENAME_TC: "{{.FILENAME_TC}}"
+  FILENAME_PARTICIPANT: "{{.FILENAME_PARTICIPANT}}"
 
 # Create a dotenv .env file in the root folder
 # to override the default values defined in .env.default
@@ -62,13 +69,13 @@ tasks:
   build-did:
     desc: Build and write the DID and x.509 certificate chain
     cmds:
-      - mkdir -p {{.STATIC_DIR}}/{{.STATIC_PATH}}
+      - mkdir -p {{.STATIC_ROOT}}/{{.STATIC_PATH}}
       - npm run build-did
-      - cp {{.CERTS_DIR}}/fullchain.pem {{.STATIC_DIR}}/{{.STATIC_PATH}}/{{.X5U_FILENAME}}
+      - cp {{.CERTS_DIR}}/fullchain.pem {{.STATIC_ROOT}}/{{.STATIC_PATH}}/{{.FILENAME_X5U}}
       # We need to add the root certificate to the chain for the Compliance request to work
       # Note that we indicated that we want to use the "ISRG Root X1" root using the preferred-chain option
       - wget https://letsencrypt.org/certs/isrgrootx1.pem -O {{.CERTS_DIR}}/isrgrootx1.pem
-      - cat {{.CERTS_DIR}}/isrgrootx1.pem >> {{.STATIC_DIR}}/{{.STATIC_PATH}}/{{.X5U_FILENAME}}
+      - cat {{.CERTS_DIR}}/isrgrootx1.pem >> {{.STATIC_ROOT}}/{{.STATIC_PATH}}/{{.FILENAME_X5U}}
     preconditions:
       - sh: test -f {{.CERTS_DIR}}/fullchain.pem
         msg: Please run the task to get the SSL certificates first
@@ -88,11 +95,11 @@ tasks:
         -v {{.ROOT_DIR}}/ssl.conf:/etc/nginx/conf.d/ssl.conf 
         -v {{.CERTS_DIR}}/privkey.pem:/etc/nginx/certs/key.pem 
         -v {{.CERTS_DIR}}/fullchain.pem:/etc/nginx/certs/cert.pem 
-        -v {{.STATIC_DIR}}:/usr/share/nginx/html/ 
+        -v {{.STATIC_ROOT}}:/usr/share/nginx/html/ 
         nginx:{{.NGINX_IMAGE_TAG}}
 
   request-compliance:
-    desc: Call the Compliance API to get integrity proofs
+    desc: Call the Compliance API to get integrity proofs and expose the resulting Verifiable Presentation
     deps:
       - start-webserver
     cmds:
