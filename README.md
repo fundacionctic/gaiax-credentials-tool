@@ -30,116 +30,175 @@ This will generate the certificates and store them in the `certs` folder. You ca
 
 ```console
 $ task request-compliance
+```
 
+The output should be something similar to the following:
+
+<details>
+<summary>Show example log</summary>
+  
+```console
 [...]
 
-Building Participant Verifiable Credential...
+Building Participant Verifiable Credential
 {
-  "@context": [
-    "https://www.w3.org/2018/credentials/v1",
-    "https://w3id.org/security/suites/jws-2020/v1",
-    "https://registry.lab.gaia-x.eu/development/api/trusted-shape-registry/v1/shapes/jsonld/trustframework#"
+  '@context': [
+    'https://www.w3.org/2018/credentials/v1',
+    'https://w3id.org/security/suites/jws-2020/v1',
+    'https://registry.lab.gaia-x.eu/development/api/trusted-shape-registry/v1/shapes/jsonld/trustframework#'
   ],
-  "type": [
-    "VerifiableCredential"
-  ],
-  "id": "https://gaiaxsd.cticpoc.com/gaiaxsd-cticpoc-com",
-  "issuer": "did:web:gaiaxsd.cticpoc.com:gaiaxsd-cticpoc-com",
-  "issuanceDate": "2023-08-29T09:46:12.529Z",
-  "credentialSubject": {
-    "type": "gx:LegalParticipant",
-    "gx:legalName": "CTIC Technology Centre",
-    "gx:legalRegistrationNumber": {
-      "id": "https://gaiaxsd.cticpoc.com/gaiaxsd-cticpoc-com#lrn"
-    },
-    "gx:headquarterAddress": {
-      "gx:countrySubdivisionCode": "ES-AS"
-    },
-    "gx:legalAddress": {
-      "gx:countrySubdivisionCode": "ES-AS"
-    },
-    "gx-terms-and-conditions:gaiaxTermsAndConditions": "70c1d713215f95191a11d38fe2341faed27d19e083917bc8732ca4fea4976700",
-    "id": "https://gaiaxsd.cticpoc.com/gaiaxsd-cticpoc-com"
+  type: [ 'VerifiableCredential' ],
+  id: 'https://gaiaxsd.cticpoc.com/gaiaxsd-cticpoc-com/participant.json',
+  issuer: 'did:web:gaiaxsd.cticpoc.com:gaiaxsd-cticpoc-com',
+  issuanceDate: '2023-09-04T16:05:00.391Z',
+  credentialSubject: {
+    type: 'gx:LegalParticipant',
+    'gx:legalName': 'CTIC Technology Centre',
+    'gx:legalRegistrationNumber': { id: 'https://gaiaxsd.cticpoc.com/gaiaxsd-cticpoc-com/lrn.json' },
+    'gx:headquarterAddress': { 'gx:countrySubdivisionCode': 'ES-AS' },
+    'gx:legalAddress': { 'gx:countrySubdivisionCode': 'ES-AS' },
+    'gx-terms-and-conditions:gaiaxTermsAndConditions': 'https://gaiaxsd.cticpoc.com/gaiaxsd-cticpoc-com/tsandcs.json',
+    id: 'https://gaiaxsd.cticpoc.com/gaiaxsd-cticpoc-com/participant.json'
   },
-  "proof": {
-    "type": "JsonWebSignature2020",
-    "created": "2023-08-29T09:46:13.444Z",
-    "proofPurpose": "assertionMethod",
-    "verificationMethod": "did:web:gaiaxsd.cticpoc.com:gaiaxsd-cticpoc-com#JWK2020",
-    "jws": "eyJhbGciOiJQUzI1NiIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..XS7YtcnNCxsoW2B6iFsd_PuIdOyQEzVn4uq7-I6Jb6AKOa2zchEteRPhaUEKcVHiAkCUd5ZbzYQu1kAQgX3HJ06HjQVad9MIec0fGvBq19-2_aM9TQEf4ohX8AVdEaxm8SRm4gBEr25kU2OYb49fpaFzNZqcDUPHqc2NonxjRkU9gdTAFQEuOMe7Wk202cPd9kypHB3Jw_Fma5SN_gJ7ekyBgPhuombsNWjFxN7wNe6sNlU_ZmZAK0XkQrR-b4BtPH8hGjCdtjzJXONIYp_oaCn6_ugQFDEuEn0-RYTlbOJJmYkFG6oE6JbPM0-nap4INJv0rKuWGIDvKc679pNOmg"
+  proof: {
+    type: 'JsonWebSignature2020',
+    created: '2023-09-04T16:05:01.361Z',
+    proofPurpose: 'assertionMethod',
+    verificationMethod: 'did:web:gaiaxsd.cticpoc.com:gaiaxsd-cticpoc-com#JWK2020',
+    jws: 'eyJhbGciOiJQUzI1NiIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..X_LcblWeb9o_Mkcpppm6GhDNnT22z7uoAuds_0QkEpWXYqxKwtLl_OtNzl-RPfhd2iIOCV1YinKlJWHyEFDM5ylhBwdM3KwiHYSKjSyDVtwvYP29GXuesyoHAiQuZtxrLDe0jPq0LhOdeGGtXU0aD_3a5uoNv9rmXDJmMZAIM7TFzol6lug-UIV178ROviA1GLV1fSxc0jnk7GUrYv3OMoorAGAkcXaV8-fx8cGaeyI0eMiY-OpyvKwrbFmukgkSc32QdcwfOsieDDOUsMFv4_MXN3IRYiXNrA3scv-p7FxHsdBFdz3k6yhWUTIn6pp1lNrNDuwW5Y6nrr_6jbVAsA'
   }
 }
-Building Legal Registration Number Verifiable Credential...
+Building Legal Registration Number Verifiable Credential
 {
-  "@context": [
-    "https://www.w3.org/2018/credentials/v1",
-    "https://w3id.org/security/suites/jws-2020/v1"
+  '@context': [
+    'https://www.w3.org/2018/credentials/v1',
+    'https://w3id.org/security/suites/jws-2020/v1'
   ],
-  "type": "VerifiableCredential",
-  "id": "https://gaiaxsd.cticpoc.com/gaiaxsd-cticpoc-com#lrn",
-  "issuer": "did:web:gaiaxsd.cticpoc.com:gaiaxsd-cticpoc-com",
-  "issuanceDate": "2023-08-29T09:46:13.450Z",
-  "credentialSubject": {
-    "id": "https://gaiaxsd.cticpoc.com/gaiaxsd-cticpoc-com#lrn",
-    "@context": "https://registry.lab.gaia-x.eu/development/api/trusted-shape-registry/v1/shapes/jsonld/trustframework#",
-    "type": "gx:legalRegistrationNumber",
-    "gx:vatID": "ESX1234567X",
-    "gx:vatID-countryCode": "ES"
+  type: 'VerifiableCredential',
+  id: 'https://gaiaxsd.cticpoc.com/gaiaxsd-cticpoc-com/lrn.json',
+  issuer: 'did:web:gaiaxsd.cticpoc.com:gaiaxsd-cticpoc-com',
+  issuanceDate: '2023-09-04T16:05:01.372Z',
+  credentialSubject: {
+    id: 'https://gaiaxsd.cticpoc.com/gaiaxsd-cticpoc-com/lrn.json',
+    '@context': 'https://registry.lab.gaia-x.eu/development/api/trusted-shape-registry/v1/shapes/jsonld/trustframework#',
+    type: 'gx:legalRegistrationNumber',
+    'gx:vatID': 'ESX1234567X',
+    'gx:vatID-countryCode': 'ES'
   },
-  "evidence": [
+  proof: {
+    type: 'JsonWebSignature2020',
+    created: '2023-09-04T16:05:02.057Z',
+    proofPurpose: 'assertionMethod',
+    verificationMethod: 'did:web:gaiaxsd.cticpoc.com:gaiaxsd-cticpoc-com#JWK2020',
+    jws: 'eyJhbGciOiJQUzI1NiIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..iUyklRg3WNrlMp_lr-7pp2KbTatCYGgyg6BuATCRM46no6TwSAooN81HaZYOcy93p1d8W2uVMBqABq_bHdZJW7wQDblLPMP-s-wriexUpNyF6x6Hxh8YwMO1CVhesfUoKoib3_gMX7nY4gaVBvPWxq8GaX3z4dxeGWZfWQhaGcEDr6UPRX0qFC2tH0P6BMJvRalvO5M6jbmI-cKp3tzwsXnW-O-2HUjZFFnd_w_Sip_WzTh7LcyOEi2N0aPqmYFUnns9hyN98NG7oqdokG0Mle-DNH5zJ3cpk2zWUtrtFoQS3H4gg2VPJXRYg5Qd_lYLRFCu2jCiSXV1esveoQwqqA'
+  }
+}
+Building Terms and Conditions Verifiable Credential
+{
+  '@context': [
+    'https://www.w3.org/2018/credentials/v1',
+    'https://w3id.org/security/suites/jws-2020/v1',
+    'https://registry.lab.gaia-x.eu/development/api/trusted-shape-registry/v1/shapes/jsonld/trustframework#'
+  ],
+  type: 'VerifiableCredential',
+  id: 'https://gaiaxsd.cticpoc.com/gaiaxsd-cticpoc-com/tsandcs.json',
+  issuer: 'did:web:gaiaxsd.cticpoc.com:gaiaxsd-cticpoc-com',
+  issuanceDate: '2023-09-04T16:05:02.063Z',
+  credentialSubject: {
+    '@context': 'https://registry.lab.gaia-x.eu/development/api/trusted-shape-registry/v1/shapes/jsonld/trustframework#',
+    type: 'gx:GaiaXTermsAndConditions',
+    id: 'https://gaiaxsd.cticpoc.com/gaiaxsd-cticpoc-com/tsandcs.json',
+    'gx:termsAndConditions': 'The PARTICIPANT signing the Self-Description agrees as follows:\n' +
+      '- to update its descriptions about any changes, be it technical, organizational, or legal - especially but not limited to contractual in regards to the indicated attributes present in the descriptions.\n' +
+      '\n' +
+      'The keypair used to sign Verifiable Credentials will be revoked where Gaia-X Association becomes aware of any inaccurate statements in regards to the claims which result in a non-compliance with the Trust Framework and policy rules defined in the Policy Rules and Labelling Document (PRLD).'
+  },
+  proof: {
+    type: 'JsonWebSignature2020',
+    created: '2023-09-04T16:05:02.729Z',
+    proofPurpose: 'assertionMethod',
+    verificationMethod: 'did:web:gaiaxsd.cticpoc.com:gaiaxsd-cticpoc-com#JWK2020',
+    jws: 'eyJhbGciOiJQUzI1NiIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..L2lawtLyiTVfzducBRuNU0RJad3VaqyIqt1AwM5tEO28m7hqtCCFf2raYRLzzJ6jv0CyjTkqn5pL_6fp8D1hu0bKSt6Z-XBHMd8PvwlLb0nxPqO3VGyYI_qfY13sIAmPGM_iFo2sgPb4tOCPrE6qgud4MptU1qR_6oRXsaZm9uwjiWBuH2TJ87HaaldNwcc_cONKrruaaaITBKuQUnfMuDHdcnda4JBdTPohrUSF4VSHh70oCaCl3hdv8qGguSs65jzx4lTKVd0LLJ2mTqb0u5_v1VMsK6k3-GitJoXaahqj2-L1y7gevytaeiGpAWEefjFdUHokIttirsjCHevLdw'
+  }
+}
+Sending Verifiable Presentation to Compliance API
+POST -> https://compliance.lab.gaia-x.eu/main/api/credential-offers
+{
+  '@context': 'https://www.w3.org/2018/credentials/v1',
+  type: 'VerifiablePresentation',
+  verifiableCredential: [
     {
-      "gx:evidenceURL": "http://ec.europa.eu/taxation_customs/vies/services/checkVatService",
-      "gx:executionDate": "2023-07-12T09:05:00.819Z",
-      "gx:evidenceOf": "gx:vatID"
+      '@context': [Array],
+      type: [Array],
+      id: 'https://gaiaxsd.cticpoc.com/gaiaxsd-cticpoc-com/participant.json',
+      issuer: 'did:web:gaiaxsd.cticpoc.com:gaiaxsd-cticpoc-com',
+      issuanceDate: '2023-09-04T16:05:00.391Z',
+      credentialSubject: [Object],
+      proof: [Object]
+    },
+    {
+      '@context': [Array],
+      type: 'VerifiableCredential',
+      id: 'https://gaiaxsd.cticpoc.com/gaiaxsd-cticpoc-com/lrn.json',
+      issuer: 'did:web:gaiaxsd.cticpoc.com:gaiaxsd-cticpoc-com',
+      issuanceDate: '2023-09-04T16:05:01.372Z',
+      credentialSubject: [Object],
+      proof: [Object]
+    },
+    {
+      '@context': [Array],
+      type: 'VerifiableCredential',
+      id: 'https://gaiaxsd.cticpoc.com/gaiaxsd-cticpoc-com/tsandcs.json',
+      issuer: 'did:web:gaiaxsd.cticpoc.com:gaiaxsd-cticpoc-com',
+      issuanceDate: '2023-09-04T16:05:02.063Z',
+      credentialSubject: [Object],
+      proof: [Object]
     }
-  ],
-  "proof": {
-    "type": "JsonWebSignature2020",
-    "created": "2023-08-29T09:46:14.100Z",
-    "proofPurpose": "assertionMethod",
-    "verificationMethod": "did:web:gaiaxsd.cticpoc.com:gaiaxsd-cticpoc-com#JWK2020",
-    "jws": "eyJhbGciOiJQUzI1NiIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..GtXh_Zb1DQhYqxdy16dM2EFv67dOVIlb9YH5eEJj2-bxNa_hnCC-avIHFtcvpliJh1PtSyTxkvxqp3so63tScE3fs3yxAF5sYGINblaT9-rMmJeGW34FKQ0s9usUo7-aCkbB1NR98bjyE6_CXprnLmGHthmmT76SpZMLgfF_ezj1hZmZAKKzIB0ZZuXKaPMEn5bI6WzeByr9nR1EDD5KVfNrPhsKbBf8kzmIs5dxvWYe0pwnmxWIe85K8sY2m4aOoGNm0ifnE11JODAxyfVqy3Aook1lBx0WBElffwdWofKFV23qhinKTOiNNI0GO1lHdJlohPMOoDgRtz2le5K50g"
-  }
+  ]
 }
-Sending Verifiable Presentation to Compliance API...
-POST https://compliance.lab.gaia-x.eu/main/api/credential-offers
 ✅ Compliance success
 {
-  "@context": [
-    "https://www.w3.org/2018/credentials/v1",
-    "https://w3id.org/security/suites/jws-2020/v1",
-    "https://registry.lab.gaia-x.eu/development/api/trusted-shape-registry/v1/shapes/jsonld/trustframework#"
+  '@context': [
+    'https://www.w3.org/2018/credentials/v1',
+    'https://w3id.org/security/suites/jws-2020/v1',
+    'https://registry.lab.gaia-x.eu/development/api/trusted-shape-registry/v1/shapes/jsonld/trustframework#'
   ],
-  "type": [
-    "VerifiableCredential"
-  ],
-  "id": "https://compliance.lab.gaia-x.eu/main/credential-offers/7dd2cb68-b8ca-4a6c-8de3-c824b67db00e",
-  "issuer": "did:web:compliance.lab.gaia-x.eu:main",
-  "issuanceDate": "2023-08-29T09:46:17.948Z",
-  "expirationDate": "2023-11-27T09:46:17.948Z",
-  "credentialSubject": [
+  type: [ 'VerifiableCredential' ],
+  id: 'https://compliance.lab.gaia-x.eu/main/credential-offers/999c15cf-a343-4e6f-a638-9fae3ea4c5cc',
+  issuer: 'did:web:compliance.lab.gaia-x.eu:main',
+  issuanceDate: '2023-09-04T16:05:08.889Z',
+  expirationDate: '2023-12-03T16:05:08.889Z',
+  credentialSubject: [
     {
-      "type": "gx:compliance",
-      "id": "https://gaiaxsd.cticpoc.com/gaiaxsd-cticpoc-com",
-      "gx:integrity": "sha256-cce025e1fdeb249c3faa9a898d14d4dc6e3c7095a1409ed7edac62e5a20bd9bb",
-      "gx:version": "22.10"
+      type: 'gx:compliance',
+      id: 'https://gaiaxsd.cticpoc.com/gaiaxsd-cticpoc-com/participant.json',
+      'gx:integrity': 'sha256-e342869540fedc44b83c5e3f527c597fca3307166585a01a7bba8e7447c68186',
+      'gx:version': '22.10'
     },
     {
-      "type": "gx:compliance",
-      "id": "https://gaiaxsd.cticpoc.com/gaiaxsd-cticpoc-com#lrn",
-      "gx:integrity": "sha256-e62cf6a91e0398c07f893d98621905975a941a3518a25b740a8a0a5de3aad3fa",
-      "gx:version": "22.10"
+      type: 'gx:compliance',
+      id: 'https://gaiaxsd.cticpoc.com/gaiaxsd-cticpoc-com/lrn.json',
+      'gx:integrity': 'sha256-163eb5878dd05a7509a39a03fede4e5556979020c624e9f37a6bca2b67a99f2f',
+      'gx:version': '22.10'
+    },
+    {
+      type: 'gx:compliance',
+      id: 'https://gaiaxsd.cticpoc.com/gaiaxsd-cticpoc-com/tsandcs.json',
+      'gx:integrity': 'sha256-20b1fa18b499e17316933aec8af9a0a43d8ef3fd53daa73b2cc66f6bcbf607e4',
+      'gx:version': '22.10'
     }
   ],
-  "proof": {
-    "type": "JsonWebSignature2020",
-    "created": "2023-08-29T09:46:18.326Z",
-    "proofPurpose": "assertionMethod",
-    "jws": "eyJhbGciOiJQUzI1NiIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..Jp4JGeohl977ovc9wGlZatYCWsatUQS3Bma_SnE_Q20fz-k1w7Hpiar2EEiZouI8e1Ibsq-BQDWwWe3xK08GfjATZa81USJW9hILbGW6eXv-hNtvd5hjCbmkrvud_aCdfexGbY-M14p5v1bJ6uaI4h52U0KDVKUlOTukEZFgwEZ_hxInhnAqWak8tI1Mm1vhS6B3hkEOmmcP816JVQddsUnEltAoLEEFtrO2MkdXdstGLTo3aNMuug8lE2ijwzCxh25Gnbg1HP8HVGYQqzDrQOr4P26gWXn5GFYdDIM7D2QnRhi6dpTNdeb8wNfhohQUBgbkDIlnfBs4XNmPnVViFA",
-    "verificationMethod": "did:web:compliance.lab.gaia-x.eu:main#X509-JWK2020"
+  proof: {
+    type: 'JsonWebSignature2020',
+    created: '2023-09-04T16:05:09.307Z',
+    proofPurpose: 'assertionMethod',
+    jws: 'eyJhbGciOiJQUzI1NiIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..QNyVDmRXBh4yCaXv3hY9UK1inIhid6YRlR9Eetw0SJE2SzyVFl3blaB7GGocza4toSQmxRoMrgS2MN-x5kYPJV0b7zCjhygqAI17q5yW3hOi7BiFrGS2jhGIrEdaUfK-Yl0bnQ-VkhCz3tJBi-sWRVf7khgPwX67i-ImgB8OoUlGD0-yMszSdltboMCRiAJK8McPHD5ZQpcQLrKjJubUZM2DIY1B0NtJiIK-EKPKlUxJmRbfA_jWJiS5KVQdg6ucrY5cKAakhESOyOhAHgNVyuDa3pTjQcxVxqvKPtpPSQNa_fh4IAeXf2p-l7nvah_9bjYIYZO_KrN3P6-n94P74Q',
+    verificationMethod: 'did:web:compliance.lab.gaia-x.eu:main#X509-JWK2020'
   }
 }
+Writing resulting Verifiable Presentation to /home/htdocs/gaiaxsd-cticpoc-com/vp.json
 ```
+</details>
 
 ## References
 
