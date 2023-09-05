@@ -3,9 +3,8 @@ version: "3"
 vars:
   CERTS_DIR: "{{.ROOT_DIR}}/certs"
   CERTBOT_IMAGE: certbot/certbot:v2.6.0
-  STATIC_PATH:
-    sh: echo "{{.CERTBOT_DOMAIN}}" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-zA-Z0-9]+/-/g' | sed -E 's/^-|-$//g'
   STATIC_ROOT: "{{.ROOT_DIR}}/htdocs"
+  STATIC_PATH: .well-known
   NGINX_CONTAINER_NAME: gaiax_nginx
   NGINX_IMAGE_TAG: 1.23
   FILENAME_X5U: x5u.pem
@@ -20,7 +19,8 @@ env:
   PATH_PRIVATE_KEY: "{{.CERTS_DIR}}/privkey.pem"
   BASE_URL: "https://{{.CERTBOT_DOMAIN}}/{{.STATIC_PATH}}"
   WEBSERVER_DIR: "{{.STATIC_ROOT}}/{{.STATIC_PATH}}"
-  DID_WEB_ID: "did:web:{{.CERTBOT_DOMAIN}}:{{.STATIC_PATH}}"
+  DID_WEB_ID: 
+    sh: if [[ "{{.STATIC_PATH}}" == ".well-known" ]]; then echo "did:web:{{.CERTBOT_DOMAIN}}"; else echo "did:web:{{.CERTBOT_DOMAIN}}:{{.STATIC_PATH}}"; fi
   FILENAME_X5U: "{{.FILENAME_X5U}}"
   FILENAME_DID: "{{.FILENAME_DID}}"
   FILENAME_VP: "{{.FILENAME_VP}}"
