@@ -15,3 +15,7 @@ export function getLegalRegistrationNumberUrl() {
 export function getTermsConditionsUrl() {
   return joinUrl(process.env.BASE_URL, process.env.FILENAME_TC);
 }
+
+export function getServiceOfferingUrl() {
+  return joinUrl(process.env.BASE_URL, process.env.FILENAME_SO);
+}

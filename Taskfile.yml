@@ -13,6 +13,7 @@ vars:
   FILENAME_LRN: lrn.json
   FILENAME_TC: tsandcs.json
   FILENAME_PARTICIPANT: participant.json
+  FILENAME_SO: serviceoffering.json
 
 env:
   PATH_CERTIFICATE: "{{.CERTS_DIR}}/cert.pem"
@@ -27,6 +28,7 @@ env:
   FILENAME_LRN: "{{.FILENAME_LRN}}"
   FILENAME_TC: "{{.FILENAME_TC}}"
   FILENAME_PARTICIPANT: "{{.FILENAME_PARTICIPANT}}"
+  FILENAME_SO: "{{.FILENAME_SO}}"
 
 # Create a dotenv .env file in the root folder
 # to override the default values defined in .env.default

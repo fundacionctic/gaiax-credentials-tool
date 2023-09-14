@@ -1,5 +1,3 @@
-import axios from "axios";
-import chalk from "chalk";
 import * as jose from "jose";
 import fs from "node:fs/promises";
 import path from "node:path";
@@ -178,55 +176,4 @@ export async function buildTermsConditionsVC() {
   await writeFile(filePath, doc);
 
   return doc;
-}
-
-export async function writeParticipantCredentials() {
-  console.log("Building Participant Verifiable Credential");
-  const vcParticipant = await buildParticipantVC();
-  console.log(vcParticipant);
-
-  console.log("Building Legal Registration Number Verifiable Credential");
-  const vcLRN = await buildLegalRegistrationNumberVC();
-  console.log(vcLRN);
-
-  console.log("Building Terms and Conditions Verifiable Credential");
-  const vcTC = await buildTermsConditionsVC();
-  console.log(vcTC);
-
-  const verifiablePresentation = {
-    "@context": "https://www.w3.org/2018/credentials/v1",
-    type: "VerifiablePresentation",
-    verifiableCredential: [vcParticipant, vcLRN, vcTC],
-  };
-
-  console.log("Sending Verifiable Presentation to Compliance API");
-  console.log(`POST -> ${process.env.API_COMPLIANCE_CREDENTIAL_OFFER}`);
-  console.log(verifiablePresentation);
-
-  try {
-    const res = await axios.post(
-      process.env.API_COMPLIANCE_CREDENTIAL_OFFER,
-      verifiablePresentation
-    );
-
-    console.log(chalk.green("✅ Compliance success"));
-    console.log(res.data);
-
-    Object.assign(verifiablePresentation, {
-      verifiableCredential: [vcParticipant, vcLRN, vcTC, res.data],
-    });
-
-    const filePath = path.join(
-      process.env.WEBSERVER_DIR,
-      process.env.FILENAME_VP
-    );
-
-    console.log(`Writing resulting Verifiable Presentation to ${filePath}`);
-
-    await writeFile(filePath, verifiablePresentation);
-  } catch (err) {
-    console.error(chalk.red("🔴 Compliance error"));
-    console.error(err.response.data);
-    throw err;
-  }
 }
