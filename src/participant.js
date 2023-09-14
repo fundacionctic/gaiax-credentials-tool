@@ -1,57 +1,23 @@
-const jose = require("jose");
-const fs = require("node:fs/promises");
-const jsonld = require("jsonld");
-const crypto = require("node:crypto");
-const axios = require("axios");
-const chalk = require("chalk");
-const path = require("node:path");
+import axios from "axios";
+import chalk from "chalk";
+import * as jose from "jose";
+import fs from "node:fs/promises";
+import path from "node:path";
+import {
+  getIssuerDID,
+  getLegalRegistrationNumberUrl,
+  getParticipantUrl,
+  getTermsConditionsUrl,
+} from "./config.js";
+import {
+  ALGORITHM_RSASSA_PSS,
+  createProof,
+  joinUrl,
+  publicKeyMatchesCertificate,
+  writeFile,
+} from "./utils.js";
 
-const CMD_DID = "did";
-const CMD_VALIDATE = "validate";
-const ALGORITHM_RSASSA_PSS = "PS256";
-const ALGORITHM_URDNA2015 = "URDNA2015";
-
-async function publicKeyMatchesCertificate(publicKeyJwk, certificatePem) {
-  try {
-    const pk = await jose.importJWK(publicKeyJwk);
-    const spki = await jose.exportSPKI(pk);
-    const x509 = await jose.importX509(certificatePem, ALGORITHM_RSASSA_PSS);
-    const spkiX509 = await jose.exportSPKI(x509);
-    return spki === spkiX509;
-  } catch (error) {
-    console.error(error);
-    throw new Error(
-      "Could not confirm X509 public key with certificate chain."
-    );
-  }
-}
-
-async function writeFile(filePath, obj) {
-  const data = JSON.stringify(obj, null, 2);
-  await fs.writeFile(filePath, data);
-}
-
-function joinUrl(...parts) {
-  return parts.map((item) => item.trimEnd("/")).join("/");
-}
-
-function getIssuerDID() {
-  return process.env.DID_WEB_ID;
-}
-
-function getParticipantUrl() {
-  return joinUrl(process.env.BASE_URL, process.env.FILENAME_PARTICIPANT);
-}
-
-function getLegalRegistrationNumberUrl() {
-  return joinUrl(process.env.BASE_URL, process.env.FILENAME_LRN);
-}
-
-function getTermsConditionsUrl() {
-  return joinUrl(process.env.BASE_URL, process.env.FILENAME_TC);
-}
-
-async function createDIDFile() {
+export async function writeDIDFile() {
   const certificatePem = await fs.readFile(process.env.PATH_CERTIFICATE, {
     encoding: "utf8",
   });
@@ -88,54 +54,7 @@ async function createDIDFile() {
   await writeFile(filePath, did);
 }
 
-function sha256(input) {
-  return crypto.createHash("sha256").update(input).digest("hex");
-}
-
-async function canonize(doc) {
-  return await jsonld.canonize(doc, {
-    algorithm: ALGORITHM_URDNA2015,
-  });
-}
-
-async function sign(hash) {
-  const privkeyPem = await fs.readFile(process.env.PATH_PRIVATE_KEY, {
-    encoding: "utf8",
-  });
-
-  const rsaPrivateKey = await jose.importPKCS8(
-    privkeyPem,
-    ALGORITHM_RSASSA_PSS
-  );
-
-  const jws = await new jose.CompactSign(new TextEncoder().encode(hash))
-    .setProtectedHeader({
-      alg: ALGORITHM_RSASSA_PSS,
-      b64: false,
-      crit: ["b64"],
-    })
-    .sign(rsaPrivateKey);
-
-  return jws;
-}
-
-async function createProof(doc) {
-  const canonized = await canonize(doc);
-  const hash = sha256(canonized);
-  const created = new Date().toISOString();
-
-  const proof = {
-    type: "JsonWebSignature2020",
-    created,
-    proofPurpose: "assertionMethod",
-    verificationMethod: `${process.env.DID_WEB_ID}#JWK2020`,
-    jws: await sign(hash),
-  };
-
-  return proof;
-}
-
-async function buildParticipantVC() {
+export async function buildParticipantVC() {
   const issuanceDate = new Date().toISOString();
 
   const doc = {
@@ -173,12 +92,13 @@ async function buildParticipantVC() {
     process.env.WEBSERVER_DIR,
     process.env.FILENAME_PARTICIPANT
   );
+
   await writeFile(filePath, doc);
 
   return doc;
 }
 
-async function buildLegalRegistrationNumberVC() {
+export async function buildLegalRegistrationNumberVC() {
   const issuanceDate = new Date().toISOString();
 
   const doc = {
@@ -207,12 +127,13 @@ async function buildLegalRegistrationNumberVC() {
     process.env.WEBSERVER_DIR,
     process.env.FILENAME_LRN
   );
+
   await writeFile(filePath, doc);
 
   return doc;
 }
 
-async function buildTermsConditionsVC() {
+export async function buildTermsConditionsVC() {
   const issuanceDate = new Date().toISOString();
 
   const termsAndConditions =
@@ -253,12 +174,13 @@ async function buildTermsConditionsVC() {
     process.env.WEBSERVER_DIR,
     process.env.FILENAME_TC
   );
+
   await writeFile(filePath, doc);
 
   return doc;
 }
 
-async function requestCompliance() {
+export async function writeParticipantCredentials() {
   console.log("Building Participant Verifiable Credential");
   const vcParticipant = await buildParticipantVC();
   console.log(vcParticipant);
@@ -305,19 +227,6 @@ async function requestCompliance() {
   } catch (err) {
     console.error(chalk.red("🔴 Compliance error"));
     console.error(err.response.data);
+    throw err;
   }
 }
-
-async function main() {
-  const subCommand = process.argv[2];
-
-  if (subCommand === CMD_DID) {
-    await createDIDFile();
-  } else if (subCommand === CMD_VALIDATE) {
-    await requestCompliance();
-  } else {
-    console.log("Unknown command");
-  }
-}
-
-main();
