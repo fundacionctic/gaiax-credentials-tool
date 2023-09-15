@@ -1,8 +1,8 @@
 import axios from "axios";
 import chalk from "chalk";
 import { Command } from "commander";
-import path from "node:path";
 import {
+  getConfig,
   getIssuerDID,
   getParticipantUrl,
   getServiceOfferingUrl,
@@ -18,6 +18,8 @@ import { buildServiceOffering } from "./service.js";
 import { writeFile } from "./utils.js";
 
 export async function signCredentials({ verifiableCredentials }) {
+  const config = getConfig();
+
   const verifiablePresentation = {
     "@context": "https://www.w3.org/2018/credentials/v1",
     type: "VerifiablePresentation",
@@ -25,12 +27,12 @@ export async function signCredentials({ verifiableCredentials }) {
   };
 
   console.log("Sending Verifiable Presentation to Compliance API");
-  console.log(`POST -> ${process.env.API_COMPLIANCE_CREDENTIAL_OFFER}`);
+  console.log(`POST -> ${config.urlAPICompliance}`);
   console.log(verifiablePresentation);
 
   try {
     const res = await axios.post(
-      process.env.API_COMPLIANCE_CREDENTIAL_OFFER,
+      config.urlAPICompliance,
       verifiablePresentation
     );
 
@@ -41,14 +43,11 @@ export async function signCredentials({ verifiableCredentials }) {
       verifiableCredential: [...verifiableCredentials, res.data],
     });
 
-    const filePath = path.join(
-      process.env.WEBSERVER_DIR,
-      process.env.FILENAME_VP
+    console.log(
+      `Writing resulting Verifiable Presentation to ${config.pathVerifiablePresentation}`
     );
 
-    console.log(`Writing resulting Verifiable Presentation to ${filePath}`);
-
-    await writeFile(filePath, verifiablePresentation);
+    await writeFile(config.pathVerifiablePresentation, verifiablePresentation);
   } catch (err) {
     console.error(chalk.red("🔴 Compliance error"));
     const errMsg = (err.response && err.response.data) || err;
@@ -72,17 +71,14 @@ async function actionCredentials() {
 
   console.log("Building Service Offering Verifiable Credential");
 
-  const serviceOfferingWritePath = path.join(
-    process.env.WEBSERVER_DIR,
-    process.env.FILENAME_SO
-  );
+  const config = getConfig();
 
   const vcSO = await buildServiceOffering({
     didIssuer: getIssuerDID(),
     legalParticipantUrl: getParticipantUrl(),
     termsConditionsUrl: getTermsConditionsUrl(),
     serviceOfferingUrl: getServiceOfferingUrl(),
-    serviceOfferingWritePath,
+    serviceOfferingWritePath: config.pathServiceOffering,
   });
 
   console.log(vcSO);

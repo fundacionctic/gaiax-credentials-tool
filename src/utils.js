@@ -2,6 +2,7 @@ import * as jose from "jose";
 import jsonld from "jsonld";
 import crypto from "node:crypto";
 import fs from "node:fs/promises";
+import { getConfig } from "./config.js";
 
 export const ALGORITHM_RSASSA_PSS = "PS256";
 export const ALGORITHM_URDNA2015 = "URDNA2015";
@@ -44,7 +45,9 @@ export async function canonize(doc) {
 }
 
 export async function sign(hash) {
-  const privkeyPem = await fs.readFile(process.env.PATH_PRIVATE_KEY, {
+  const config = getConfig();
+
+  const privkeyPem = await fs.readFile(config.pathPrivateKey, {
     encoding: "utf8",
   });
 
@@ -65,6 +68,7 @@ export async function sign(hash) {
 }
 
 export async function createProof(doc) {
+  const config = getConfig();
   const canonized = await canonize(doc);
   const hash = sha256(canonized);
   const created = new Date().toISOString();
@@ -73,7 +77,7 @@ export async function createProof(doc) {
     type: "JsonWebSignature2020",
     created,
     proofPurpose: "assertionMethod",
-    verificationMethod: `${process.env.DID_WEB_ID}#JWK2020`,
+    verificationMethod: `${config.didWebId}#JWK2020`,
     jws: await sign(hash),
   };
 
