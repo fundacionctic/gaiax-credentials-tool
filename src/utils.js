@@ -3,6 +3,7 @@ import jsonld from "jsonld";
 import crypto from "node:crypto";
 import fs from "node:fs/promises";
 import { getConfig } from "./config.js";
+import { logger } from "./log.js";
 
 export const ALGORITHM_RSASSA_PSS = "PS256";
 export const ALGORITHM_URDNA2015 = "URDNA2015";
@@ -18,7 +19,8 @@ export async function publicKeyMatchesCertificate(
     const spkiX509 = await jose.exportSPKI(x509);
     return spki === spkiX509;
   } catch (error) {
-    console.error(error);
+    logger.error(error);
+
     throw new Error(
       "Could not confirm X509 public key with certificate chain."
     );

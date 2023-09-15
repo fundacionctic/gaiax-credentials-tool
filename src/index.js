@@ -8,6 +8,7 @@ import {
   getServiceOfferingUrl,
   getTermsConditionsUrl,
 } from "./config.js";
+import { logger } from "./log.js";
 import {
   buildLegalRegistrationNumberVC,
   buildParticipantVC,
@@ -26,9 +27,9 @@ export async function signCredentials({ verifiableCredentials }) {
     verifiableCredential: verifiableCredentials,
   };
 
-  console.log("Sending Verifiable Presentation to Compliance API");
-  console.log(`POST -> ${config.urlAPICompliance}`);
-  console.log(verifiablePresentation);
+  logger.info("Sending Verifiable Presentation to Compliance API");
+  logger.info(`POST -> ${config.urlAPICompliance}`);
+  logger.debug(verifiablePresentation);
 
   try {
     const res = await axios.post(
@@ -36,40 +37,40 @@ export async function signCredentials({ verifiableCredentials }) {
       verifiablePresentation
     );
 
-    console.log(chalk.green("✅ Compliance success"));
-    console.log(res.data);
+    logger.info(chalk.green("✅ Compliance success"));
+    logger.debug(res.data);
 
     Object.assign(verifiablePresentation, {
       verifiableCredential: [...verifiableCredentials, res.data],
     });
 
-    console.log(
+    logger.info(
       `Writing resulting Verifiable Presentation to ${config.pathVerifiablePresentation}`
     );
 
     await writeFile(config.pathVerifiablePresentation, verifiablePresentation);
   } catch (err) {
-    console.error(chalk.red("🔴 Compliance error"));
+    logger.error(chalk.red("🔴 Compliance error"));
     const errMsg = (err.response && err.response.data) || err;
-    console.error(errMsg);
+    logger.error(errMsg);
     throw err;
   }
 }
 
 async function actionCredentials() {
-  console.log("Building Participant Verifiable Credential");
+  logger.info("Building Participant Verifiable Credential");
   const vcParticipant = await buildParticipantVC();
-  console.log(vcParticipant);
+  logger.debug(vcParticipant);
 
-  console.log("Building Legal Registration Number Verifiable Credential");
+  logger.info("Building Legal Registration Number Verifiable Credential");
   const vcLRN = await buildLegalRegistrationNumberVC();
-  console.log(vcLRN);
+  logger.debug(vcLRN);
 
-  console.log("Building Terms and Conditions Verifiable Credential");
+  logger.info("Building Terms and Conditions Verifiable Credential");
   const vcTC = await buildTermsConditionsVC();
-  console.log(vcTC);
+  logger.debug(vcTC);
 
-  console.log("Building Service Offering Verifiable Credential");
+  logger.info("Building Service Offering Verifiable Credential");
 
   const config = getConfig();
 
@@ -81,7 +82,7 @@ async function actionCredentials() {
     serviceOfferingWritePath: config.pathServiceOffering,
   });
 
-  console.log(vcSO);
+  logger.debug(vcSO);
 
   await signCredentials({
     verifiableCredentials: [vcParticipant, vcLRN, vcTC, vcSO],
