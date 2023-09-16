@@ -1,6 +1,77 @@
 import axios from "axios";
 import { createProof, sha256, writeFile } from "./utils.js";
 
+const LICENSE_EUPL12 =
+  "https://joinup.ec.europa.eu/sites/default/files/custom-page/attachment/2020-03/EUPL-1.2%20EN.txt";
+
+export async function buildOpenAPIResources({
+  openAPIUrl,
+  didIssuer,
+  participantUrl,
+  virtResourceUrl,
+  virtResourceWritePath = undefined,
+  instVirtResourceUrl,
+  instVirtResourceWritePath = undefined,
+  license = LICENSE_EUPL12,
+}) {
+  const issuanceDate = new Date().toISOString();
+
+  const context = [
+    "https://www.w3.org/2018/credentials/v1",
+    "https://w3id.org/security/suites/jws-2020/v1",
+    "https://registry.lab.gaia-x.eu/development/api/trusted-shape-registry/v1/shapes/jsonld/trustframework#",
+  ];
+
+  const virtualResource = {
+    "@context": context,
+    type: "VerifiableCredential",
+    id: virtResourceUrl,
+    issuer: didIssuer,
+    issuanceDate: issuanceDate,
+    credentialSubject: {
+      id: virtResourceUrl,
+      type: "gx:VirtualResource",
+      "gx:description": `HTTP API that is formally described using the OpenAPI schema at ${openAPIUrl}`,
+      "gx:copyrightOwnedBy": [participantUrl],
+      "gx:license": [license],
+      "gx:policy": [""],
+    },
+  };
+
+  const instantiatedVirtualResource = {
+    "@context": context,
+    type: "VerifiableCredential",
+    id: instVirtResourceUrl,
+    issuer: didIssuer,
+    issuanceDate: issuanceDate,
+    credentialSubject: {
+      id: instVirtResourceUrl,
+      type: "gx:InstantiatedVirtualResource",
+      "gx:maintainedBy": [participantUrl],
+      "gx:hostedOn": virtResourceUrl,
+      "gx:instanceOf": virtResourceUrl,
+      "gx:tenantOwnedBy": [participantUrl],
+      "gx:serviceAccessPoint": [openAPIUrl],
+    },
+  };
+
+  for (const [doc, writePath] of [
+    [virtualResource, virtResourceWritePath],
+    [instantiatedVirtualResource, instVirtResourceWritePath],
+  ]) {
+    Object.assign(doc, { proof: await createProof(doc) });
+
+    if (writePath) {
+      await writeFile(writePath, doc);
+    }
+  }
+
+  return {
+    instantiatedVirtualResource,
+    virtualResource,
+  };
+}
+
 export async function buildServiceOffering({
   didIssuer,
   legalParticipantUrl,
@@ -8,6 +79,7 @@ export async function buildServiceOffering({
   termsConditionsHash = undefined,
   serviceOfferingUrl,
   serviceOfferingWritePath = undefined,
+  aggregatedResourceUrls = undefined,
 }) {
   const issuanceDate = new Date().toISOString();
 
@@ -47,6 +119,12 @@ export async function buildServiceOffering({
       },
     },
   };
+
+  if (aggregatedResourceUrls) {
+    Object.assign(doc.credentialSubject, {
+      "gx:aggregationOf": aggregatedResourceUrls,
+    });
+  }
 
   const proof = await createProof(doc);
   Object.assign(doc, { proof });

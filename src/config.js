@@ -22,6 +22,7 @@ export function getConfig() {
     webserverDir: process.env.WEBSERVER_DIR,
     pathCertificate: process.env.PATH_CERTIFICATE,
     pathPrivateKey: process.env.PATH_PRIVATE_KEY,
+    openAPISpec: process.env.RESOURCE_OPENAPI_SPEC,
   };
 
   const schemaSpec = Object.fromEntries(
@@ -64,4 +65,19 @@ export function getConfig() {
   });
 
   return config;
+}
+
+function slugify(val) {
+  return val
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "-")
+    .replace(/-+/g, "-");
+}
+
+export function getVirtualResourceName({ openAPISpec }) {
+  return `vr-${slugify(openAPISpec)}`;
+}
+
+export function getInstantiatedVirtualResourceName({ openAPISpec }) {
+  return `ivr-${slugify(openAPISpec)}`;
 }

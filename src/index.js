@@ -1,7 +1,12 @@
 import axios from "axios";
 import chalk from "chalk";
 import { Command } from "commander";
-import { getConfig } from "./config.js";
+import path from "node:path";
+import {
+  getConfig,
+  getInstantiatedVirtualResourceName,
+  getVirtualResourceName,
+} from "./config.js";
 import { logger } from "./log.js";
 import {
   buildLegalRegistrationNumberVC,
@@ -9,8 +14,8 @@ import {
   buildTermsConditionsVC,
   writeDIDFile,
 } from "./participant.js";
-import { buildServiceOffering } from "./service.js";
-import { writeFile } from "./utils.js";
+import { buildOpenAPIResources, buildServiceOffering } from "./service.js";
+import { joinUrl, writeFile } from "./utils.js";
 
 export async function signCredentials({ verifiableCredentials }) {
   const config = getConfig();
@@ -64,9 +69,50 @@ async function actionCredentials() {
   const vcTC = await buildTermsConditionsVC();
   logger.debug(vcTC);
 
-  logger.info("Building Service Offering Verifiable Credential");
+  logger.info("Building Verifiable Credentials for Resources");
 
   const config = getConfig();
+
+  const virtResourceName = getVirtualResourceName({
+    openAPISpec: config.openAPISpec,
+  });
+
+  const instVirtResourceName = getInstantiatedVirtualResourceName({
+    openAPISpec: config.openAPISpec,
+  });
+
+  const virtResourceUrl = joinUrl(config.baseUrl, `${virtResourceName}.json`);
+
+  const instVirtResourceUrl = joinUrl(
+    config.baseUrl,
+    `${instVirtResourceName}.json`
+  );
+
+  const virtResourceWritePath = path.join(
+    config.webserverDir,
+    `${virtResourceName}.json`
+  );
+
+  const instVirtResourceWritePath = path.join(
+    config.webserverDir,
+    `${instVirtResourceName}.json`
+  );
+
+  const { instantiatedVirtualResource: vcIVR, virtualResource: vcVR } =
+    await buildOpenAPIResources({
+      openAPIUrl: config.openAPISpec,
+      didIssuer: config.didWebId,
+      participantUrl: config.urlParticipant,
+      virtResourceUrl,
+      virtResourceWritePath,
+      instVirtResourceUrl,
+      instVirtResourceWritePath,
+    });
+
+  logger.debug(vcIVR);
+  logger.debug(vcVR);
+
+  logger.info("Building Verifiable Credential for Service Offering");
 
   const vcSO = await buildServiceOffering({
     didIssuer: config.didWebId,
@@ -74,6 +120,7 @@ async function actionCredentials() {
     termsConditionsUrl: config.urlTermsConditions,
     serviceOfferingUrl: config.urlServiceOffering,
     serviceOfferingWritePath: config.pathServiceOffering,
+    aggregatedResourceUrls: [virtResourceUrl],
   });
 
   logger.debug(vcSO);
