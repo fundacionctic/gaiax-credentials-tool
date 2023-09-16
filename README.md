@@ -26,7 +26,7 @@ $ npm install
 $ sudo task get-certs
 ```
 
-This will generate the certificates and store them in the `certs` folder. You can now build the Verifiable Credentials of your _Participant_ and  _Legal Registration Number_ and submit the resulting Verifiable Presentation to the Compliance API:
+This will generate the certificates and store them in the `certs` folder. You can now build your Verifiable Credentials and submit the resulting Verifiable Presentation to the Compliance API:
 
 ```console
 $ task build-credentials
