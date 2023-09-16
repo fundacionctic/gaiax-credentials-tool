@@ -86,9 +86,9 @@ tasks:
         -v {{.STATIC_ROOT}}:/usr/share/nginx/html/ 
         nginx:{{.NGINX_IMAGE_TAG}}
 
-  request-compliance:
-    desc: Call the Compliance API to get integrity proofs and expose the resulting Verifiable Presentation
+  build-credentials:
+    desc: Build Gaia-X Credentials and call the Compliance API to get integrity proofs
     deps:
       - start-webserver
     cmds:
-      - npm run validate-compliance
+      - npm run build-credentials

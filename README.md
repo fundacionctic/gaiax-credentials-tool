@@ -29,7 +29,7 @@ $ sudo task get-certs
 This will generate the certificates and store them in the `certs` folder. You can now build the Verifiable Credentials of your _Participant_ and  _Legal Registration Number_ and submit the resulting Verifiable Presentation to the Compliance API:
 
 ```console
-$ task request-compliance
+$ task build-credentials
 ```
 
 The output should be something similar to the following:
@@ -38,7 +38,7 @@ The output should be something similar to the following:
 <summary>Show example log</summary>
   
 ```console
-$ LOG_LEVEL=debug task request-compliance
+$ LOG_LEVEL=debug task build-credentials
 task: [build-did] mkdir -p /home/user/gaiax-self-description-poc/htdocs/.well-known
 task: [build-did] npm run build-did
 
@@ -66,9 +66,9 @@ gaiax_nginx
 task: [start-webserver] docker run -d -p 443:443  --restart unless-stopped  --name gaiax_nginx  -v /home/user/gaiax-self-description-poc/ssl.conf:/etc/nginx/conf.d/ssl.conf  -v /home/user/gaiax-self-description-poc/certs/privkey.pem:/etc/nginx/certs/key.pem  -v /home/user/gaiax-self-description-poc/certs/fullchain.pem:/etc/nginx/certs/cert.pem  -v /home/user/gaiax-self-description-poc/htdocs:/usr/share/nginx/html/  nginx:1.23
 
 5b6bb705a0b3e9871e2c32f37f616dab44f7829c59cee3597894a91e73ffcf27
-task: [request-compliance] npm run validate-compliance
+task: [build-credentials] npm run build-credentials
 
-> gaiax-self-description-poc@1.0.0 validate-compliance
+> gaiax-self-description-poc@1.0.0 build-credentials
 > node ./src/index.js credentials
 
 [12:15:54.469] INFO (19161): Building Participant Verifiable Credential
