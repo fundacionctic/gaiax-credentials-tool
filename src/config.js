@@ -65,23 +65,3 @@ export function getConfig() {
 
   return config;
 }
-
-export function getIssuerDID() {
-  return getConfig().didWebId;
-}
-
-export function getParticipantUrl() {
-  return getConfig().urlParticipant;
-}
-
-export function getLegalRegistrationNumberUrl() {
-  return getConfig().urlLRN;
-}
-
-export function getTermsConditionsUrl() {
-  return getConfig().urlTermsConditions;
-}
-
-export function getServiceOfferingUrl() {
-  return getConfig().urlServiceOffering;
-}

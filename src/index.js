@@ -1,13 +1,7 @@
 import axios from "axios";
 import chalk from "chalk";
 import { Command } from "commander";
-import {
-  getConfig,
-  getIssuerDID,
-  getParticipantUrl,
-  getServiceOfferingUrl,
-  getTermsConditionsUrl,
-} from "./config.js";
+import { getConfig } from "./config.js";
 import { logger } from "./log.js";
 import {
   buildLegalRegistrationNumberVC,
@@ -75,10 +69,10 @@ async function actionCredentials() {
   const config = getConfig();
 
   const vcSO = await buildServiceOffering({
-    didIssuer: getIssuerDID(),
-    legalParticipantUrl: getParticipantUrl(),
-    termsConditionsUrl: getTermsConditionsUrl(),
-    serviceOfferingUrl: getServiceOfferingUrl(),
+    didIssuer: config.didWebId,
+    legalParticipantUrl: config.urlParticipant,
+    termsConditionsUrl: config.urlTermsConditions,
+    serviceOfferingUrl: config.urlServiceOffering,
     serviceOfferingWritePath: config.pathServiceOffering,
   });
 

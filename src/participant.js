@@ -1,13 +1,6 @@
 import * as jose from "jose";
 import fs from "node:fs/promises";
-import path from "node:path";
-import {
-  getConfig,
-  getIssuerDID,
-  getLegalRegistrationNumberUrl,
-  getParticipantUrl,
-  getTermsConditionsUrl,
-} from "./config.js";
+import { getConfig } from "./config.js";
 import {
   ALGORITHM_RSASSA_PSS,
   createProof,
@@ -60,14 +53,14 @@ export async function buildParticipantVC() {
       "https://registry.lab.gaia-x.eu/development/api/trusted-shape-registry/v1/shapes/jsonld/trustframework#",
     ],
     type: ["VerifiableCredential"],
-    id: getParticipantUrl(),
-    issuer: getIssuerDID(),
+    id: config.urlParticipant,
+    issuer: config.didWebId,
     issuanceDate: issuanceDate,
     credentialSubject: {
       type: "gx:LegalParticipant",
       "gx:legalName": config.legalName,
       "gx:legalRegistrationNumber": {
-        id: getLegalRegistrationNumberUrl(),
+        id: config.urlLRN,
       },
       "gx:headquarterAddress": {
         "gx:countrySubdivisionCode": config.countrySubdivisionCode,
@@ -76,8 +69,8 @@ export async function buildParticipantVC() {
         "gx:countrySubdivisionCode": config.countrySubdivisionCode,
       },
       "gx-terms-and-conditions:gaiaxTermsAndConditions":
-        getTermsConditionsUrl(),
-      id: getParticipantUrl(),
+        config.urlTermsConditions,
+      id: config.urlParticipant,
     },
   };
 
@@ -99,11 +92,11 @@ export async function buildLegalRegistrationNumberVC() {
       "https://w3id.org/security/suites/jws-2020/v1",
     ],
     type: "VerifiableCredential",
-    id: getLegalRegistrationNumberUrl(),
-    issuer: getIssuerDID(),
+    id: config.urlLRN,
+    issuer: config.didWebId,
     issuanceDate: issuanceDate,
     credentialSubject: {
-      id: getLegalRegistrationNumberUrl(),
+      id: config.urlLRN,
       "@context":
         "https://registry.lab.gaia-x.eu/development/api/trusted-shape-registry/v1/shapes/jsonld/trustframework#",
       type: "gx:legalRegistrationNumber",
@@ -143,14 +136,14 @@ export async function buildTermsConditionsVC() {
       "https://registry.lab.gaia-x.eu/development/api/trusted-shape-registry/v1/shapes/jsonld/trustframework#",
     ],
     type: "VerifiableCredential",
-    id: getTermsConditionsUrl(),
-    issuer: getIssuerDID(),
+    id: config.urlTermsConditions,
+    issuer: config.didWebId,
     issuanceDate: issuanceDate,
     credentialSubject: {
       "@context":
         "https://registry.lab.gaia-x.eu/development/api/trusted-shape-registry/v1/shapes/jsonld/trustframework#",
       type: "gx:GaiaXTermsAndConditions",
-      id: getTermsConditionsUrl(),
+      id: config.urlTermsConditions,
       "gx:termsAndConditions": termsAndConditions,
     },
   };
