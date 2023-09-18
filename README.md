@@ -18,6 +18,7 @@ First you need to update the configuration to match your environment. Copy the f
 
 * `CERTBOT_DOMAIN`: The domain name of your server for which you want to generate the Let's Encrypt certificate.
 * `CERTBOT_EMAIL`: The email of the owner of the domain name.
+* `RESOURCE_OPENAPI_SPEC`: This variable should point to an OpenAPI schema that describes the HTTP API that you want to model as a [Gaia-X Resource](https://gaia-x.gitlab.io/policy-rules-committee/trust-framework/resource_and_subclasses/#virtual-resource).
 
 Then, install the dependencies and request the certificates with the following commands:
 
