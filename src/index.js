@@ -15,16 +15,14 @@ import {
   writeDIDFile,
 } from "./participant.js";
 import { buildOpenAPIResources, buildServiceOffering } from "./service.js";
-import { joinUrl, writeFile } from "./utils.js";
+import { buildVerifiablePresentation, joinUrl, writeFile } from "./utils.js";
 
 export async function signCredentials({ verifiableCredentials }) {
   const config = getConfig();
 
-  const verifiablePresentation = {
-    "@context": "https://www.w3.org/2018/credentials/v1",
-    type: "VerifiablePresentation",
-    verifiableCredential: verifiableCredentials,
-  };
+  const verifiablePresentation = buildVerifiablePresentation({
+    verifiableCredentials,
+  });
 
   logger.info("Sending Verifiable Presentation to Compliance API");
   logger.info(`POST -> ${config.urlAPICompliance}`);
@@ -39,15 +37,7 @@ export async function signCredentials({ verifiableCredentials }) {
     logger.info(chalk.green("✅ Compliance success"));
     logger.debug(res.data);
 
-    Object.assign(verifiablePresentation, {
-      verifiableCredential: [...verifiableCredentials, res.data],
-    });
-
-    logger.info(
-      `Writing resulting Verifiable Presentation to ${config.pathVerifiablePresentation}`
-    );
-
-    await writeFile(config.pathVerifiablePresentation, verifiablePresentation);
+    return res.data;
   } catch (err) {
     logger.error(chalk.red("🔴 Compliance error"));
     const errMsg = (err.response && err.response.data) || err;
@@ -125,9 +115,26 @@ async function actionCredentials() {
 
   logger.debug(vcSO);
 
-  await signCredentials({
-    verifiableCredentials: [vcParticipant, vcLRN, vcTC, vcSO],
+  const verifiableCredentials = [vcParticipant, vcLRN, vcTC, vcSO];
+
+  const vcCompliance = await signCredentials({
+    verifiableCredentials,
   });
+
+  const vpResult = buildVerifiablePresentation({
+    verifiableCredentials: [
+      ...verifiableCredentials,
+      vcCompliance,
+      vcVR,
+      vcIVR,
+    ],
+  });
+
+  logger.info(
+    `Writing resulting Verifiable Presentation to ${config.pathVerifiablePresentation}`
+  );
+
+  await writeFile(config.pathVerifiablePresentation, vpResult);
 }
 
 const program = new Command();

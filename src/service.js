@@ -1,5 +1,6 @@
 import axios from "axios";
-import { createProof, sha256, writeFile } from "./utils.js";
+import { logger } from "./log.js";
+import { createProof, getProperty, sha256, writeFile } from "./utils.js";
 
 const LICENSE_EUPL12 =
   "https://joinup.ec.europa.eu/sites/default/files/custom-page/attachment/2020-03/EUPL-1.2%20EN.txt";
@@ -38,21 +39,39 @@ export async function buildOpenAPIResources({
     },
   };
 
+  logger.debug("Fetching OpenAPI schema: %s", openAPIUrl);
+  const apiSchemaRes = await axios.get(openAPIUrl);
+  const apiSchema = apiSchemaRes.data;
+
+  const instVirtResourceSubject = {
+    id: instVirtResourceUrl,
+    type: ["gx:InstantiatedVirtualResource", "dcat:DataService"],
+    "gx:maintainedBy": [participantUrl],
+    "gx:hostedOn": virtResourceUrl,
+    "gx:instanceOf": virtResourceUrl,
+    "gx:tenantOwnedBy": [participantUrl],
+    "gx:serviceAccessPoint": [openAPIUrl],
+    "dcat:endpointDescription": openAPIUrl,
+  };
+
+  if (apiSchema.servers && apiSchema.servers.length > 0) {
+    const server = apiSchema.servers[0];
+    const serverUrl = getProperty(server, "url");
+
+    if (serverUrl) {
+      Object.assign(instVirtResourceSubject, {
+        "dcat:endpointURL": serverUrl,
+      });
+    }
+  }
+
   const instantiatedVirtualResource = {
-    "@context": context,
+    "@context": [...context, "https://www.w3.org/ns/dcat.jsonld"],
     type: "VerifiableCredential",
     id: instVirtResourceUrl,
     issuer: didIssuer,
     issuanceDate: issuanceDate,
-    credentialSubject: {
-      id: instVirtResourceUrl,
-      type: "gx:InstantiatedVirtualResource",
-      "gx:maintainedBy": [participantUrl],
-      "gx:hostedOn": virtResourceUrl,
-      "gx:instanceOf": virtResourceUrl,
-      "gx:tenantOwnedBy": [participantUrl],
-      "gx:serviceAccessPoint": [openAPIUrl],
-    },
+    credentialSubject: instVirtResourceSubject,
   };
 
   for (const [doc, writePath] of [

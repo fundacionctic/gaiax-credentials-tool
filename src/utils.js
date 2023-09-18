@@ -85,3 +85,26 @@ export async function createProof(doc) {
 
   return proof;
 }
+
+export function getProperty(obj, prop) {
+  const props = prop.split(".");
+  let value = obj;
+
+  for (const p of props) {
+    if (value[p] === undefined) {
+      return undefined;
+    }
+
+    value = value[p];
+  }
+
+  return value;
+}
+
+export function buildVerifiablePresentation({ verifiableCredentials }) {
+  return {
+    "@context": "https://www.w3.org/2018/credentials/v1",
+    type: "VerifiablePresentation",
+    verifiableCredential: verifiableCredentials,
+  };
+}
