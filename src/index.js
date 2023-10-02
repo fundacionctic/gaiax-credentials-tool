@@ -42,7 +42,7 @@ export async function signCredentials({ verifiableCredentials }) {
     logger.error(chalk.red("🔴 Compliance error"));
     const errMsg = (err.response && err.response.data) || err;
     logger.error(errMsg);
-    throw err;
+    throw new Error(`Error in Compliance API request: ${JSON.stringify(errMsg)}`);
   }
 }
 

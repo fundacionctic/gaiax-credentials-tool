@@ -79,7 +79,7 @@ export async function createProof(doc) {
     type: "JsonWebSignature2020",
     created,
     proofPurpose: "assertionMethod",
-    verificationMethod: `${config.didWebId}#JWK2020`,
+    verificationMethod: `${config.didWebId}`,
     jws: await sign(hash),
   };
 

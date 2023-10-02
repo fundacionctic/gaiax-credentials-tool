@@ -36,7 +36,7 @@ export async function writeDIDFile() {
         publicKeyJwk,
       },
     ],
-    assertionMethod: [`${config.didWebId}#JWK2020`],
+    assertionMethod: [`${config.didWebId}`],
   };
 
   await writeFile(config.pathDID, did);
