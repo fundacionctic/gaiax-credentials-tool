@@ -40,9 +40,24 @@ export function sha256(input) {
   return crypto.createHash("sha256").update(input).digest("hex");
 }
 
+const CACHE = {};
+
+const customLoader = async (url) => {
+  if (url in CACHE) {
+    logger.debug(`Loaded ${url} from cache`);
+    return CACHE[url];
+  }
+
+  logger.info(`Loading '${url}' from remote source`);
+  const loaderResp = await jsonld.documentLoaders.node()(url);
+  CACHE[url] = loaderResp;
+  return loaderResp
+};
+
 export async function canonize(doc) {
   return await jsonld.canonize(doc, {
     algorithm: ALGORITHM_URDNA2015,
+    documentLoader: customLoader,
   });
 }
 
