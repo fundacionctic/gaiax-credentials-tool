@@ -51,6 +51,7 @@ export async function buildParticipantVC() {
       "https://www.w3.org/2018/credentials/v1",
       "https://w3id.org/security/suites/jws-2020/v1",
       "https://registry.lab.gaia-x.eu/development/api/trusted-shape-registry/v1/shapes/jsonld/trustframework#",
+      "https://schema.org/version/latest/schemaorg-current-https.jsonld",
     ],
     type: ["VerifiableCredential"],
     id: config.urlParticipant,
@@ -71,6 +72,8 @@ export async function buildParticipantVC() {
       "gx-terms-and-conditions:gaiaxTermsAndConditions":
         config.urlTermsConditions,
       id: config.urlParticipant,
+      "schema:description":
+        "This field demonstrates the possibility of using additional ontologies to add fields that are not explicitly included in the Trust Framework specification.",
     },
   };
 
