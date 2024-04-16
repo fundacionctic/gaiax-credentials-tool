@@ -139,11 +139,16 @@ export async function buildServiceOffering({
     },
   };
 
-  if (aggregatedResourceUrls) {
-    Object.assign(doc.credentialSubject, {
-      "gx:aggregationOf": aggregatedResourceUrls,
-    });
-  }
+  // ToDo: Remove comment
+  // We started getting errors like the following:
+  // Error: Error in Compliance API request:
+  // {"statusCode":409,"message":{"conforms":false,"results":["ERROR: https://gaiax.cticpoc.com/.well-known/serviceoffering.json null: "]},"error":"Conflict"}
+  // It seems the conformance errors come from gx:aggregationOf
+  // if (aggregatedResourceUrls) {
+  //   Object.assign(doc.credentialSubject, {
+  //     "gx:aggregationOf": aggregatedResourceUrls,
+  //   });
+  // }
 
   const proof = await createProof(doc);
   Object.assign(doc, { proof });
