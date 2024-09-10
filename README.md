@@ -380,12 +380,10 @@ task: [build-credentials] npm run build-credentials
 
 | Reference | Description |
 | --- | --- |
-| [Gaia-X Lab Registry API](https://registry.lab.gaia-x.eu/main/docs) | A public deployment of the [Gaia-X Registry of Trust Anchors](https://gitlab.com/gaia-x/lab/compliance/gx-registry) that can be used for development purposes. |
-| [Gaia-X Lab Compliance API](https://compliance.lab.gaia-x.eu/main/docs/) | A public deployment of the [Gaia-X Compliance Service](https://gitlab.com/gaia-x/lab/compliance/gx-compliance) that can be used for development purposes. |
 | [Gaia-X GitLab](https://gitlab.com/gaia-x) | A GitLab organization that contains the repositories for the software implementations and documentation materials of Gaia-X. | 1
-| [Gaia-X Wizard](https://wizard.lab.gaia-x.eu/) | A user-friendly web application for creating Gaia-X credentials (i.e., self-descriptions). This is invaluable for educational purposes and for gaining insight into the concepts of Gaia-X. |
 | [Gaia-X Glossary](https://gaia-x.gitlab.io/glossary/) | A comprehensive list of Gaia-X terms. |
 | [Gaia-X Digital Clearing House](https://gaia-x.eu/gxdch/) | A closer look at the services required to achieve Gaia-X compliance. |
+| [Gaia-X Digital Clearing House Status](https://docs.gaia-x.eu/framework/) | Public instances of the Gaia-X Digital Clearing House, including availability and status metrics. |
 | [Gaia-X Trust Framework](https://gaia-x.gitlab.io/policy-rules-committee/trust-framework/) | Detailed documentation of the minimal set of rules to be part of Gaia-X Ecosystem. |
 | [Simplified Gaia-X credentials usage flow](https://gitlab.com/gaia-x/lab/compliance/gx-compliance/-/blob/02928741c7071de30c9c9295599e1caad760c47a/README-api.md) | A diagram that shows how the Notary, Compliance Service and Registry fit together in the process of building and signing Gaia-X credentials (i.e., self-descriptions). |
 | [deltaDAO/self-description-signer](https://github.com/deltaDAO/self-description-signer) | The original repository that served as an inspiration and reference for this proof of concept. |
