@@ -11,6 +11,7 @@ authors:
 title: "Gaia-X Credentials Generation Tool"
 version: 1.0.0
 date-released: 2023-10-11
+repository-code: "https://github.com/fundacionctic/gaiax-credentials-tool"
 keywords:
   - "Gaia-X"
   - "Verifiable Credentials"
