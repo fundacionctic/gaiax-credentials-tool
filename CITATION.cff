@@ -1,0 +1,17 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+  - family-names: García Mangas
+    given-names: Andrés
+    orcid: https://orcid.org/0000-0002-8010-8681
+    affiliation: 
+      - name: "CTIC"
+        city: "Gijón"
+        country: "Spain"
+title: "Gaia-X Credentials Generation Tool"
+version: 1.0.0
+date-released: 2023-10-11
+keywords:
+  - "Gaia-X"
+  - "Verifiable Credentials"
+  - "Trust Framework"
