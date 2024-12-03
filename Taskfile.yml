@@ -89,7 +89,12 @@ tasks:
 
   build-credentials:
     desc: Build Gaia-X Credentials and call the Compliance API to get integrity proofs
+    cmds:
+      - npm run build-credentials
+
+  build-vp:
+    desc: Call Gaia-X to generate the VP
     deps:
       - start-webserver
     cmds:
-      - npm run build-credentials
+      - npm run build-vp

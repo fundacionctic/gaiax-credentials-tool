@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "build-did": "node ./src/index.js did",
-    "build-credentials": "node ./src/index.js credentials"
+    "build-credentials": "node ./src/index.js credentials",
+    "build-vp": "node ./src/index.js vp"
   },
   "author": "Andrés García Mangas <andres.garcia@fundacionctic.org>",
   "dependencies": {

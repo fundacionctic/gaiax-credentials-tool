@@ -1,4 +1,5 @@
 import axios from "axios";
+import { promises as fs } from 'fs';
 import chalk from "chalk";
 import { Command } from "commander";
 import path from "node:path";
@@ -114,6 +115,38 @@ async function actionCredentials() {
   });
 
   logger.debug(vcSO);
+}
+
+async function actionVP() {
+
+  const config = getConfig();
+
+  const vcParticipant = JSON.parse(await fs.readFile(config.pathParticipant, 'utf-8'));
+  const vcLRN = JSON.parse(await fs.readFile(config.pathLRN, 'utf-8'));
+  const vcTC = JSON.parse(await fs.readFile(config.pathTermsConditions, 'utf-8'));
+  const vcSO = JSON.parse(await fs.readFile(config.pathServiceOffering, 'utf-8'));
+
+  // TODO: These names should be saved to avoid requiring the OpenAPI for this step
+  const virtResourceName = getVirtualResourceName({
+    openAPISpec: config.openAPISpec,
+  });
+  
+  const instVirtResourceName = getInstantiatedVirtualResourceName({
+    openAPISpec: config.openAPISpec,
+  });
+
+  const virtResourceWritePath = path.join(
+    config.webserverDir,
+    `${virtResourceName}.json`
+  );
+
+  const instVirtResourceWritePath = path.join(
+    config.webserverDir,
+    `${instVirtResourceName}.json`
+  );
+
+  const vcVR = JSON.parse(await fs.readFile(virtResourceWritePath, 'utf-8'))
+  const vcIVR = JSON.parse(await fs.readFile(instVirtResourceWritePath, 'utf-8'))
 
   const verifiableCredentials = [vcParticipant, vcLRN, vcTC, vcSO];
 
@@ -157,5 +190,10 @@ program
   .command("credentials")
   .description("Build and sign the Verifiable Credentials")
   .action(actionCredentials);
+
+program
+  .command("vp")
+  .description("Build and sign the VP")
+  .action(actionVP);
 
 program.parse();
