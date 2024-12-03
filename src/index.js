@@ -109,7 +109,7 @@ async function actionCredentials() {
     didIssuer: config.didWebId,
     legalParticipantUrl: config.urlParticipant,
     termsConditionsPath: config.pathTermsConditions,
-    termsConditionsUrl: config.termsConditionsUrl,
+    termsConditionsUrl: config.urlTermsConditions,
     serviceOfferingUrl: config.urlServiceOffering,
     serviceOfferingWritePath: config.pathServiceOffering,
     aggregatedResourceUrls: [virtResourceUrl],
