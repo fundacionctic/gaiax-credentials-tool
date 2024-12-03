@@ -32,7 +32,7 @@ tasks:
         --preferred-chain="ISRG Root X1"
         certonly
         --standalone -n --agree-tos --key-type rsa --email {{.CERTBOT_EMAIL}} -d {{.CERTBOT_DOMAIN}}
-      - mkdir -p {{.CERTS_DIR}}
+      - mkdir -p {{.CERTS_DIR}} {{.STATIC_ROOT}}/{{.STATIC_PATH}}
       - cp -Lr /etc/letsencrypt/live/{{.CERTBOT_DOMAIN}}/* {{.CERTS_DIR}}
       # We need to add the root certificate to the chain for the Compliance request to work
       # Note that we indicated that we want to use the "ISRG Root X1" root using the preferred-chain option
