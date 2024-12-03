@@ -24,7 +24,7 @@ tasks:
       - nginx
 
   serve:
-    desc: Call Gaia-X to generate the VP
+    desc: Call Gaia-X to generate the VP and serve it
     deps:
       - start-webserver
     cmds:

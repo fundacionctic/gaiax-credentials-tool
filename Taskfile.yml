@@ -51,12 +51,12 @@ tasks:
       - check-sudo
     cmds:
       - >
-        docker run -it --rm -p 80:80 
-        -v "/etc/letsencrypt:/etc/letsencrypt" 
-        -v "/var/lib/letsencrypt:/var/lib/letsencrypt" 
+        docker run -it --rm -p 80:80
+        -v "/etc/letsencrypt:/etc/letsencrypt"
+        -v "/var/lib/letsencrypt:/var/lib/letsencrypt"
         {{.CERTBOT_IMAGE}}
-        --preferred-chain="ISRG Root X1" 
-        certonly 
+        --preferred-chain="ISRG Root X1"
+        certonly
         --standalone -n --agree-tos --key-type rsa --email {{.CERTBOT_EMAIL}} -d {{.CERTBOT_DOMAIN}}
       - mkdir -p {{.CERTS_DIR}}
       - cp -Lr /etc/letsencrypt/live/{{.CERTBOT_DOMAIN}}/* {{.CERTS_DIR}}
@@ -76,13 +76,13 @@ tasks:
       - cmd: docker rm -f {{.NGINX_CONTAINER_NAME}}
         ignore_error: true
       - >
-        docker run -d -p 443:443 
-        --restart unless-stopped 
-        --name {{.NGINX_CONTAINER_NAME}} 
-        -v {{.ROOT_DIR}}/ssl.conf:/etc/nginx/conf.d/ssl.conf 
-        -v {{.CERTS_DIR}}/privkey.pem:/etc/nginx/certs/key.pem 
-        -v {{.CERTS_DIR}}/fullchain.pem:/etc/nginx/certs/cert.pem 
-        -v {{.STATIC_ROOT}}:/usr/share/nginx/html/ 
+        docker run -d -p 443:443
+        --restart unless-stopped
+        --name {{.NGINX_CONTAINER_NAME}}
+        -v {{.ROOT_DIR}}/ssl.conf:/etc/nginx/conf.d/ssl.conf
+        -v {{.CERTS_DIR}}/privkey.pem:/etc/nginx/certs/key.pem
+        -v {{.CERTS_DIR}}/fullchain.pem:/etc/nginx/certs/cert.pem
+        -v {{.STATIC_ROOT}}:/usr/share/nginx/html/
         nginx:{{.NGINX_IMAGE_TAG}}
 
   stop-webserver:
