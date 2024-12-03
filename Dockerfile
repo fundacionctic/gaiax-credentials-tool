@@ -31,6 +31,7 @@ COPY Taskfile.common.yml /app/Taskfile.common.yml
 COPY Taskfile.docker.yml /app/Taskfile.yml
 COPY Dockerfile.server /app/Dockerfile.server
 COPY Taskfile.server.yml /app/Taskfile.server.yml
+COPY .env.default /app/.env.default
 COPY src /app/src
 
 ENV PATH=$PATH:/usr/local/bin:/kaniko
