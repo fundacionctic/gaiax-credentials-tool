@@ -44,7 +44,6 @@ tasks:
     internal: true
     desc: Start the NGINX web server
     cmds:
-      - task: build-did
       - nginx -c /app/nginx.conf
 
   stop-webserver:

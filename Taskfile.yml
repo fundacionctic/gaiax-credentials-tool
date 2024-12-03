@@ -71,7 +71,6 @@ tasks:
     internal: true
     desc: Start the NGINX web server
     cmds:
-      - task: build-did
       - cmd: docker stop {{.NGINX_CONTAINER_NAME}}
         ignore_error: true
       - cmd: docker rm -f {{.NGINX_CONTAINER_NAME}}
