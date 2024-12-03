@@ -42,10 +42,16 @@ tasks:
 
   start-webserver:
     internal: true
-    desc: Build the DID and x.509 certificate chain and then start the NGINX web server
+    desc: Start the NGINX web server
     cmds:
       - task: build-did
       - nginx -c /app/nginx.conf
+
+  stop-webserver:
+    internal: true
+    desc: Stop the NGINX web server
+    cmds:
+      - nginx -c /app/nginx.conf -s stop
 
   build-credential-server-image:
     desc: Build a container image that calls Gaia-X to generate the VP and serves it

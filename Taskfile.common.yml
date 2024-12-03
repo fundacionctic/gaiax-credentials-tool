@@ -38,3 +38,4 @@ tasks:
       - start-webserver
     cmds:
       - npm run build-vp
+      - task: stop-webserver

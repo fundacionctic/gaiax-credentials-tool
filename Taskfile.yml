@@ -69,7 +69,7 @@ tasks:
 
   start-webserver:
     internal: true
-    desc: Build the DID and x.509 certificate chain and then start the NGINX web server
+    desc: Start the NGINX web server
     cmds:
       - task: build-did
       - cmd: docker stop {{.NGINX_CONTAINER_NAME}}
@@ -85,6 +85,13 @@ tasks:
         -v {{.CERTS_DIR}}/fullchain.pem:/etc/nginx/certs/cert.pem 
         -v {{.STATIC_ROOT}}:/usr/share/nginx/html/ 
         nginx:{{.NGINX_IMAGE_TAG}}
+
+  stop-webserver:
+    internal: true
+    desc: Stop the NGINX web server
+    cmds:
+      - docker stop {{.NGINX_CONTAINER_NAME}}
+      - docker rm -f {{.NGINX_CONTAINER_NAME}}
 
   build-credential-server-image:
     desc: Build a container image that calls Gaia-X to generate the VP and serves it

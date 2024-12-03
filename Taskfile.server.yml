@@ -19,7 +19,7 @@ dotenv: [.env, .env.default]
 
 tasks:
   start-webserver:
-    desc: Build the DID and x.509 certificate chain and then start the NGINX web server
+    desc: Start the NGINX web server
     cmds:
       - nginx
 
