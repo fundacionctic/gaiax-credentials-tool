@@ -1,0 +1,78 @@
+version: "3"
+
+vars:
+  CERTS_DIR: "{{.ROOT_DIR}}/certs"
+  STATIC_ROOT: "{{.ROOT_DIR}}/htdocs"
+  STATIC_PATH: .well-known
+  NGINX_CONTAINER_NAME: gaiax_nginx
+  NGINX_IMAGE_TAG: 1.23
+
+env:
+  PATH_CERTIFICATE: "{{.CERTS_DIR}}/cert.pem"
+  PATH_PRIVATE_KEY: "{{.CERTS_DIR}}/privkey.pem"
+  BASE_URL: "https://{{.CERTBOT_DOMAIN}}/{{.STATIC_PATH}}"
+  WEBSERVER_DIR: "{{.STATIC_ROOT}}/{{.STATIC_PATH}}"
+  DID_WEB_ID:
+    sh: if [[ "{{.STATIC_PATH}}" == ".well-known" ]]; then echo "did:web:{{.CERTBOT_DOMAIN}}"; else echo "did:web:{{.CERTBOT_DOMAIN}}:{{.STATIC_PATH}}"; fi
+
+# Create a dotenv .env file in the root folder
+# to override the default values defined in .env.default
+dotenv: [.env, .env.default]
+
+tasks:
+  check-sudo:
+    desc: Check if the user is root
+    cmds:
+      - >
+        if [ "$(id -u)" != "0" ]; then
+          echo "This task must be run as root. Please use sudo."
+          exit 1
+        fi
+
+  chown-certs:
+    desc: Change the owner of the certs folder to the current user
+    deps:
+      - check-sudo
+    cmds:
+      - chown -R $(logname):$(id -gn $(logname)) {{.CERTS_DIR}}
+
+  get-certs:
+    desc: Get the SSL certificates from Let's Encrypt
+    deps:
+      - check-sudo
+    cmds:
+      - >
+        certbot
+        --preferred-chain="ISRG Root X1"
+        certonly
+        --standalone -n --agree-tos --key-type rsa --email {{.CERTBOT_EMAIL}} -d {{.CERTBOT_DOMAIN}}
+      - mkdir -p {{.CERTS_DIR}}
+      - cp -Lr /etc/letsencrypt/live/{{.CERTBOT_DOMAIN}}/* {{.CERTS_DIR}}
+      - task: chown-certs
+
+  build-did:
+    desc: Build and write the DID and x.509 certificate chain
+    cmds:
+      - mkdir -p {{.STATIC_ROOT}}/{{.STATIC_PATH}}
+      - npm run build-did
+      - cp {{.CERTS_DIR}}/fullchain.pem {{.STATIC_ROOT}}/{{.STATIC_PATH}}/${FILENAME_X5U}
+      # We need to add the root certificate to the chain for the Compliance request to work
+      # Note that we indicated that we want to use the "ISRG Root X1" root using the preferred-chain option
+      - wget https://letsencrypt.org/certs/isrgrootx1.pem -O {{.CERTS_DIR}}/isrgrootx1.pem
+      - cat {{.CERTS_DIR}}/isrgrootx1.pem >> {{.STATIC_ROOT}}/{{.STATIC_PATH}}/${FILENAME_X5U}
+    preconditions:
+      - sh: test -f {{.CERTS_DIR}}/fullchain.pem
+        msg: Please run the task to get the SSL certificates first
+
+  start-webserver:
+    desc: Build the DID and x.509 certificate chain and then start the NGINX web server
+    cmds:
+      - task: build-did
+      - nginx
+
+  build-credentials:
+    desc: Build Gaia-X Credentials and call the Compliance API to get integrity proofs
+    deps:
+      - start-webserver
+    cmds:
+      - npm run build-credentials
