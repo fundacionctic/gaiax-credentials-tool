@@ -18,6 +18,14 @@ The main contribution of this repository is demonstrating how to programmaticall
 * [Node 18+](https://nodejs.org/en/download/package-manager).
 * [Taskfile](https://taskfile.dev/installation/).
 
+## Building the Docker image
+
+To build the Docker image, run the following command in the root of the repository:
+
+```console
+$ docker build -t gaia-x .
+```
+
 ## Usage
 
 First you need to update the configuration to match your environment. Copy the file `.env.default` from this repository to `.env` and, at least, update the following variables:
