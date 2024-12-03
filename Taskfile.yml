@@ -1,6 +1,7 @@
 version: "3"
 
 vars:
+  LETSENCRYPT_DIR: "letsencrypt"
   CERTS_DIR: "{{.ROOT_DIR}}/certs"
   CERTBOT_IMAGE: certbot/certbot:v2.6.0
   STATIC_ROOT: "{{.ROOT_DIR}}/htdocs"
@@ -44,14 +45,14 @@ tasks:
     cmds:
       - >
         docker run -it --rm -p 80:80 
-        -v "/etc/letsencrypt:/etc/letsencrypt" 
-        -v "/var/lib/letsencrypt:/var/lib/letsencrypt" 
+        -v "{{.LETSENCRYPT_DIR}}/etc/letsencrypt:/etc/letsencrypt" 
+        -v "{{.LETSENCRYPT_DIR}}/var/lib/letsencrypt:/var/lib/letsencrypt" 
         {{.CERTBOT_IMAGE}}
         --preferred-chain="ISRG Root X1" 
         certonly 
         --standalone -n --agree-tos --key-type rsa --email {{.CERTBOT_EMAIL}} -d {{.CERTBOT_DOMAIN}}
       - mkdir -p {{.CERTS_DIR}}
-      - cp -Lr /etc/letsencrypt/live/{{.CERTBOT_DOMAIN}}/* {{.CERTS_DIR}}
+      - cp -Lr {{.LETSENCRYPT_DIR}}/etc/letsencrypt/live/{{.CERTBOT_DOMAIN}}/* {{.CERTS_DIR}}
       - task: chown-certs
 
   build-did:
