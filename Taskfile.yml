@@ -7,6 +7,7 @@ vars:
   STATIC_PATH: .well-known
   NGINX_CONTAINER_NAME: gaiax_nginx
   NGINX_IMAGE_TAG: 1.23
+  CREDENTIAL_SERVER_CONTAINER_NAME: gaiax-credential-server
 
 env:
   PATH_CERTIFICATE: "{{.CERTS_DIR}}/cert.pem"
@@ -20,8 +21,14 @@ env:
 # to override the default values defined in .env.default
 dotenv: [.env, .env.default]
 
+includes:
+  common:
+    taskfile: Taskfile.common.yml
+    flatten: true
+
 tasks:
   check-sudo:
+    internal: true
     desc: Check if the user is root
     cmds:
       - >
@@ -31,6 +38,7 @@ tasks:
         fi
 
   chown-certs:
+    internal: true
     desc: Change the owner of the certs folder to the current user
     deps:
       - check-sudo
@@ -59,16 +67,8 @@ tasks:
       - cat {{.CERTS_DIR}}/isrgrootx1.pem >> {{.STATIC_ROOT}}/{{.STATIC_PATH}}/${FILENAME_X5U}
       - task: chown-certs
 
-  build-did:
-    desc: Build and write the DID and x.509 certificate chain
-    cmds:
-      - mkdir -p {{.STATIC_ROOT}}/{{.STATIC_PATH}}
-      - npm run build-did
-    preconditions:
-      - sh: test -f {{.CERTS_DIR}}/fullchain.pem
-        msg: Please run the task to get the SSL certificates first
-
   start-webserver:
+    internal: true
     desc: Build the DID and x.509 certificate chain and then start the NGINX web server
     cmds:
       - task: build-did
@@ -86,14 +86,8 @@ tasks:
         -v {{.STATIC_ROOT}}:/usr/share/nginx/html/ 
         nginx:{{.NGINX_IMAGE_TAG}}
 
-  build-credentials:
-    desc: Build Gaia-X Credentials and call the Compliance API to get integrity proofs
+  build-credential-server-image:
+    desc: Build a container image that calls Gaia-X to generate the VP and serves it
     cmds:
-      - npm run build-credentials
-
-  build-vp:
-    desc: Call Gaia-X to generate the VP
-    deps:
-      - start-webserver
-    cmds:
-      - npm run build-vp
+      - docker build -f Dockerfile.server -t {{ .CREDENTIAL_SERVER_CONTAINER_NAME }} .
+      - printf '\n\nRun the container with:\n\ndocker run -it --rm -p 443:443 {{ .CREDENTIAL_SERVER_CONTAINER_NAME }}\n\n'

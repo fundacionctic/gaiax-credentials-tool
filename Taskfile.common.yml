@@ -1,0 +1,40 @@
+version: "3"
+
+vars:
+  LETSENCRYPT_DIR: "letsencrypt"
+  CERTS_DIR: "{{.ROOT_DIR}}/certs"
+  CERTBOT_IMAGE: certbot/certbot:v2.6.0
+  STATIC_ROOT: "{{.ROOT_DIR}}/htdocs"
+  STATIC_PATH: .well-known
+  NGINX_CONTAINER_NAME: gaiax_nginx
+  NGINX_IMAGE_TAG: 1.23
+
+env:
+  PATH_CERTIFICATE: "{{.CERTS_DIR}}/cert.pem"
+  PATH_PRIVATE_KEY: "{{.CERTS_DIR}}/privkey.pem"
+  BASE_URL: "https://{{.CERTBOT_DOMAIN}}/{{.STATIC_PATH}}"
+  WEBSERVER_DIR: "{{.STATIC_ROOT}}/{{.STATIC_PATH}}"
+  DID_WEB_ID:
+    sh: if [[ "{{.STATIC_PATH}}" == ".well-known" ]]; then echo "did:web:{{.CERTBOT_DOMAIN}}"; else echo "did:web:{{.CERTBOT_DOMAIN}}:{{.STATIC_PATH}}"; fi
+
+tasks:
+  build-did:
+    desc: Build and write the DID and x.509 certificate chain
+    cmds:
+      - mkdir -p {{.STATIC_ROOT}}/{{.STATIC_PATH}}
+      - npm run build-did
+    preconditions:
+      - sh: test -f {{.CERTS_DIR}}/fullchain.pem
+        msg: Please run the task to get the SSL certificates first
+
+  build-credentials:
+    desc: Build Gaia-X Credentials and call the Compliance API to get integrity proofs
+    cmds:
+      - npm run build-credentials
+
+  build-vp:
+    desc: Call Gaia-X to generate the VP
+    deps:
+      - start-webserver
+    cmds:
+      - npm run build-vp

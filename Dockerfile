@@ -1,4 +1,13 @@
+FROM gcr.io/kaniko-project/executor AS kaniko
+
 FROM node:23.3.0-bookworm
+
+COPY --from=kaniko /kaniko/executor /kaniko/executor
+COPY --from=kaniko /etc/nsswitch.conf /etc/nsswitch.conf
+COPY --from=kaniko /kaniko/.docker /kaniko/.docker
+
+EXPOSE 80
+EXPOSE 443
 
 WORKDIR /app
 
@@ -17,8 +26,13 @@ RUN apt-get update &&\
     dpkg -i task_linux_amd64.deb &&\
     npm install
 
-COPY ssl.conf /etc/nginx/nginx.conf
+COPY nginx.conf /app/nginx.conf
+COPY Taskfile.common.yml /app/Taskfile.common.yml
 COPY Taskfile.docker.yml /app/Taskfile.yml
+COPY Dockerfile.server /app/Dockerfile.server
+COPY Taskfile.server.yml /app/Taskfile.server.yml
 COPY src /app/src
+
+ENV PATH=$PATH:/usr/local/bin:/kaniko
 
 ENTRYPOINT [ "task" ]
