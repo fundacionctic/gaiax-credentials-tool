@@ -108,7 +108,8 @@ async function actionCredentials() {
   const vcSO = await buildServiceOffering({
     didIssuer: config.didWebId,
     legalParticipantUrl: config.urlParticipant,
-    termsConditionsUrl: config.urlTermsConditions,
+    termsConditionsPath: config.pathTermsConditions,
+    termsConditionsUrl: config.termsConditionsUrl,
     serviceOfferingUrl: config.urlServiceOffering,
     serviceOfferingWritePath: config.pathServiceOffering,
     aggregatedResourceUrls: [virtResourceUrl],

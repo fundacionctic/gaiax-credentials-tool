@@ -63,7 +63,7 @@ tasks:
       - cp {{.CERTS_DIR}}/fullchain.pem {{.STATIC_ROOT}}/{{.STATIC_PATH}}/${FILENAME_X5U}
       # We need to add the root certificate to the chain for the Compliance request to work
       # Note that we indicated that we want to use the "ISRG Root X1" root using the preferred-chain option
-      - wget https://letsencrypt.org/certs/isrgrootx1.pem -O {{.CERTS_DIR}}/isrgrootx1.pem
+      # - wget https://letsencrypt.org/certs/isrgrootx1.pem -O {{.CERTS_DIR}}/isrgrootx1.pem
       - cat {{.CERTS_DIR}}/isrgrootx1.pem >> {{.STATIC_ROOT}}/{{.STATIC_PATH}}/${FILENAME_X5U}
     preconditions:
       - sh: test -f {{.CERTS_DIR}}/fullchain.pem

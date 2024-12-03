@@ -1,4 +1,5 @@
 import axios from "axios";
+import { promises as fs } from 'fs';
 import { logger } from "./log.js";
 import { createProof, getProperty, sha256, writeFile } from "./utils.js";
 
@@ -94,6 +95,7 @@ export async function buildOpenAPIResources({
 export async function buildServiceOffering({
   didIssuer,
   legalParticipantUrl,
+  termsConditionsPath,
   termsConditionsUrl,
   termsConditionsHash = undefined,
   serviceOfferingUrl,
@@ -103,11 +105,13 @@ export async function buildServiceOffering({
   const issuanceDate = new Date().toISOString();
 
   if (!termsConditionsHash) {
-    const tcRes = await axios.get(termsConditionsUrl, {
-      responseType: "arraybuffer",
-    });
+    // const tcRes = await axios.get(termsConditionsUrl, {
+    //   responseType: "arraybuffer",
+    // });
 
-    termsConditionsHash = sha256(tcRes.data);
+    const tcRes = await fs.readFile(termsConditionsPath, 'utf-8')
+
+    termsConditionsHash = sha256(tcRes);
   }
 
   const doc = {
