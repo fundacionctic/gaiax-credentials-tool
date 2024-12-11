@@ -13,8 +13,8 @@ authors:
   - family-names: Arias
     given-names: Jacinto
 title: "Gaia-X Credentials Generation Tool"
-version: 1.1.0
-date-released: 2024-09-12
+version: 1.2.0
+date-released: 2024-12-11
 repository-code: "https://github.com/fundacionctic/gaiax-credentials-tool"
 keywords:
   - "Gaia-X"
