@@ -1,0 +1,33 @@
+version: "3"
+
+vars:
+  CERTS_DIR: "{{.ROOT_DIR}}/certs"
+  STATIC_ROOT: "{{.ROOT_DIR}}/htdocs"
+  STATIC_PATH: .well-known
+
+env:
+  PATH_CERTIFICATE: "{{.CERTS_DIR}}/cert.pem"
+  PATH_PRIVATE_KEY: "{{.CERTS_DIR}}/privkey.pem"
+  BASE_URL: "https://{{.CERTBOT_DOMAIN}}/{{.STATIC_PATH}}"
+  WEBSERVER_DIR: "{{.STATIC_ROOT}}/{{.STATIC_PATH}}"
+  DID_WEB_ID:
+    sh: if [[ "{{.STATIC_PATH}}" == ".well-known" ]]; then echo "did:web:{{.CERTBOT_DOMAIN}}"; else echo "did:web:{{.CERTBOT_DOMAIN}}:{{.STATIC_PATH}}"; fi
+
+# Create a dotenv .env file in the root folder
+# to override the default values defined in .env.default
+dotenv: [.env, .env.default]
+
+tasks:
+  start-webserver:
+    desc: Start the NGINX web server
+    cmds:
+      - nginx
+
+  serve:
+    desc: Call Gaia-X to generate the VP and serve it
+    deps:
+      - start-webserver
+    cmds:
+      - npm run build-vp
+      - cmd: tail -f /var/log/nginx/access.log
+        ignore_error: true

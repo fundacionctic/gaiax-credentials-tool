@@ -1,0 +1,29 @@
+FROM node:23.3.0-bookworm
+
+EXPOSE 443
+
+WORKDIR /server
+
+COPY package.json /server/package.json
+COPY package-lock.json /server/package-lock.json
+
+RUN apt-get update &&\
+    apt-get install --no-install-recommends -y nginx &&\
+    apt-get clean &&\
+    rm -rf /var/lib/apt/lists/* &&\
+    curl -LOf https://github.com/go-task/task/releases/download/v3.40.0/task_linux_amd64.deb &&\
+    dpkg -i task_linux_amd64.deb &&\
+    rm task_linux_amd64.deb &&\
+    npm install
+
+COPY nginx.conf /etc/nginx/nginx.conf
+
+RUN sed -e 's#/app#/server#g' -i'' /etc/nginx/nginx.conf
+
+COPY .env /server/.env
+COPY Taskfile.server.yml /server/Taskfile.yml
+COPY src /server/src
+COPY certs /server/certs
+COPY htdocs /server/htdocs
+
+ENTRYPOINT [ "task", "serve" ]

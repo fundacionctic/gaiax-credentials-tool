@@ -2,11 +2,8 @@ version: "3"
 
 vars:
   CERTS_DIR: "{{.ROOT_DIR}}/certs"
-  CERTBOT_IMAGE: certbot/certbot:v2.6.0
   STATIC_ROOT: "{{.ROOT_DIR}}/htdocs"
   STATIC_PATH: .well-known
-  NGINX_CONTAINER_NAME: gaiax_nginx
-  NGINX_IMAGE_TAG: 1.23
   CREDENTIAL_SERVER_CONTAINER_NAME: gaiax-credential-server
 
 env:
@@ -27,73 +24,40 @@ includes:
     flatten: true
 
 tasks:
-  check-sudo:
-    internal: true
-    desc: Check if the user is root
-    cmds:
-      - >
-        if [ "$(id -u)" != "0" ]; then
-          echo "This task must be run as root. Please use sudo."
-          exit 1
-        fi
-
-  chown-certs:
-    internal: true
-    desc: Change the owner of the certs folder to the current user
-    deps:
-      - check-sudo
-    cmds:
-      - chown -R $(logname):$(id -gn $(logname)) {{.CERTS_DIR}}
-
   get-certs:
     desc: Get the SSL certificates from Let's Encrypt
-    deps:
-      - check-sudo
     cmds:
       - >
-        docker run -it --rm -p 80:80
-        -v "/etc/letsencrypt:/etc/letsencrypt"
-        -v "/var/lib/letsencrypt:/var/lib/letsencrypt"
-        {{.CERTBOT_IMAGE}}
+        certbot
         --preferred-chain="ISRG Root X1"
         certonly
         --standalone -n --agree-tos --key-type rsa --email {{.CERTBOT_EMAIL}} -d {{.CERTBOT_DOMAIN}}
-      - mkdir -p {{.CERTS_DIR}}
+      - mkdir -p {{.CERTS_DIR}} {{.STATIC_ROOT}}/{{.STATIC_PATH}}
       - cp -Lr /etc/letsencrypt/live/{{.CERTBOT_DOMAIN}}/* {{.CERTS_DIR}}
       # We need to add the root certificate to the chain for the Compliance request to work
       # Note that we indicated that we want to use the "ISRG Root X1" root using the preferred-chain option
       - wget https://letsencrypt.org/certs/isrgrootx1.pem -O {{.CERTS_DIR}}/isrgrootx1.pem
       - cp {{.CERTS_DIR}}/fullchain.pem {{.STATIC_ROOT}}/{{.STATIC_PATH}}/${FILENAME_X5U}
       - cat {{.CERTS_DIR}}/isrgrootx1.pem >> {{.STATIC_ROOT}}/{{.STATIC_PATH}}/${FILENAME_X5U}
-      - task: chown-certs
 
   start-webserver:
     internal: true
     desc: Start the NGINX web server
     cmds:
-      - cmd: docker stop {{.NGINX_CONTAINER_NAME}}
-        ignore_error: true
-      - cmd: docker rm -f {{.NGINX_CONTAINER_NAME}}
-        ignore_error: true
-      - >
-        docker run -d -p 443:443
-        --restart unless-stopped
-        --name {{.NGINX_CONTAINER_NAME}}
-        -v {{.ROOT_DIR}}/ssl.conf:/etc/nginx/conf.d/ssl.conf
-        -v {{.CERTS_DIR}}/privkey.pem:/etc/nginx/certs/key.pem
-        -v {{.CERTS_DIR}}/fullchain.pem:/etc/nginx/certs/cert.pem
-        -v {{.STATIC_ROOT}}:/usr/share/nginx/html/
-        nginx:{{.NGINX_IMAGE_TAG}}
+      - nginx -c /app/nginx.conf
 
   stop-webserver:
     internal: true
     desc: Stop the NGINX web server
     cmds:
-      - docker stop {{.NGINX_CONTAINER_NAME}}
-      - docker rm -f {{.NGINX_CONTAINER_NAME}}
+      - nginx -c /app/nginx.conf -s stop
 
   build-credential-server-image:
     desc: Build a container image that calls Gaia-X to generate the VP and serves it
     cmds:
-      - docker build -f Dockerfile.server -t {{ .CREDENTIAL_SERVER_CONTAINER_NAME }} .
-      - printf '\n\nRun the container with:\n\ndocker run -it --rm -p 443:443 {{ .CREDENTIAL_SERVER_CONTAINER_NAME }}\n\n'
+      - apt remove --purge -y nginx task
+      - rm -rf /etc/nginx /var/lib/nginx /var/log/nginx /app/node_modules
+      - cp -a /app /server
+      - executor -c /server --dockerfile /server/Dockerfile.server --no-push --destination {{ .CREDENTIAL_SERVER_CONTAINER_NAME }} --tar-path /out/image.tar
+      - >-
+        printf '\n\nLoad the container with:\n\ndocker load -i image.tar\n\nAnd run it with:\n\ndocker run -it --rm -p 443:443 {{ .CREDENTIAL_SERVER_CONTAINER_NAME }}\n\n'
