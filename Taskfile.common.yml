@@ -1,13 +1,13 @@
 version: "3"
 
 vars:
-  LETSENCRYPT_DIR: "letsencrypt"
   CERTS_DIR: "{{.ROOT_DIR}}/certs"
   CERTBOT_IMAGE: certbot/certbot:v2.6.0
   STATIC_ROOT: "{{.ROOT_DIR}}/htdocs"
   STATIC_PATH: .well-known
-  NGINX_CONTAINER_NAME: gaiax_nginx
+  NGINX_CONTAINER_NAME: gaiax-nginx
   NGINX_IMAGE_TAG: 1.23
+  CREDENTIAL_SERVER_IMAGE_NAME: gaiax-credential-server
 
 env:
   PATH_CERTIFICATE: "{{.CERTS_DIR}}/cert.pem"
@@ -28,14 +28,26 @@ tasks:
         msg: Please run the task to get the SSL certificates first
 
   build-credentials:
-    desc: Build Gaia-X Credentials and call the Compliance API to get integrity proofs
+    desc: Build the Verifiable Credentials that represent the Gaia-X Self-Descriptions
     cmds:
       - npm run build-credentials
 
   build-vp:
-    desc: Call Gaia-X to generate the VP
+    desc: Build the Verifiable Presentation and call the Compliance API to get integrity proofs
     deps:
       - start-webserver
     cmds:
       - npm run build-vp
       - task: stop-webserver
+
+  append-root-cert:
+    internal: true
+    desc: Append the Let's Encrypt root certificate to the certificate chain
+    cmds:
+      - mkdir -p {{.CERTS_DIR}} {{.STATIC_ROOT}}/{{.STATIC_PATH}}
+      - cp -Lr /etc/letsencrypt/live/{{.CERTBOT_DOMAIN}}/* {{.CERTS_DIR}}
+      # We need to add the root certificate to the chain for the Compliance request to work
+      # Note that we indicated that we want to use the "ISRG Root X1" root using the preferred-chain option
+      - wget https://letsencrypt.org/certs/isrgrootx1.pem -O {{.CERTS_DIR}}/isrgrootx1.pem
+      - cp {{.CERTS_DIR}}/fullchain.pem {{.STATIC_ROOT}}/{{.STATIC_PATH}}/${FILENAME_X5U}
+      - cat {{.CERTS_DIR}}/isrgrootx1.pem >> {{.STATIC_ROOT}}/{{.STATIC_PATH}}/${FILENAME_X5U}

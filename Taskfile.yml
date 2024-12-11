@@ -1,21 +1,8 @@
 version: "3"
 
 vars:
-  CERTS_DIR: "{{.ROOT_DIR}}/certs"
-  CERTBOT_IMAGE: certbot/certbot:v2.6.0
-  STATIC_ROOT: "{{.ROOT_DIR}}/htdocs"
-  STATIC_PATH: .well-known
-  NGINX_CONTAINER_NAME: gaiax_nginx
-  NGINX_IMAGE_TAG: 1.23
-  CREDENTIAL_SERVER_CONTAINER_NAME: gaiax-credential-server
-
-env:
-  PATH_CERTIFICATE: "{{.CERTS_DIR}}/cert.pem"
-  PATH_PRIVATE_KEY: "{{.CERTS_DIR}}/privkey.pem"
-  BASE_URL: "https://{{.CERTBOT_DOMAIN}}/{{.STATIC_PATH}}"
-  WEBSERVER_DIR: "{{.STATIC_ROOT}}/{{.STATIC_PATH}}"
-  DID_WEB_ID:
-    sh: if [[ "{{.STATIC_PATH}}" == ".well-known" ]]; then echo "did:web:{{.CERTBOT_DOMAIN}}"; else echo "did:web:{{.CERTBOT_DOMAIN}}:{{.STATIC_PATH}}"; fi
+  RUNNER_IMAGE_NAME: gaiax-runner
+  RUNNER_ALIAS: gaia-x
 
 # Create a dotenv .env file in the root folder
 # to override the default values defined in .env.default
@@ -39,11 +26,12 @@ tasks:
 
   chown-certs:
     internal: true
-    desc: Change the owner of the certs folder to the current user
+    desc: Change the owner of the certs and static root folders to the current user
     deps:
       - check-sudo
     cmds:
       - chown -R $(logname):$(id -gn $(logname)) {{.CERTS_DIR}}
+      - chown -R $(logname):$(id -gn $(logname)) {{.STATIC_ROOT}}
 
   get-certs:
     desc: Get the SSL certificates from Let's Encrypt
@@ -58,13 +46,7 @@ tasks:
         --preferred-chain="ISRG Root X1"
         certonly
         --standalone -n --agree-tos --key-type rsa --email {{.CERTBOT_EMAIL}} -d {{.CERTBOT_DOMAIN}}
-      - mkdir -p {{.CERTS_DIR}}
-      - cp -Lr /etc/letsencrypt/live/{{.CERTBOT_DOMAIN}}/* {{.CERTS_DIR}}
-      # We need to add the root certificate to the chain for the Compliance request to work
-      # Note that we indicated that we want to use the "ISRG Root X1" root using the preferred-chain option
-      - wget https://letsencrypt.org/certs/isrgrootx1.pem -O {{.CERTS_DIR}}/isrgrootx1.pem
-      - cp {{.CERTS_DIR}}/fullchain.pem {{.STATIC_ROOT}}/{{.STATIC_PATH}}/${FILENAME_X5U}
-      - cat {{.CERTS_DIR}}/isrgrootx1.pem >> {{.STATIC_ROOT}}/{{.STATIC_PATH}}/${FILENAME_X5U}
+      - task: append-root-cert
       - task: chown-certs
 
   start-webserver:
@@ -93,7 +75,36 @@ tasks:
       - docker rm -f {{.NGINX_CONTAINER_NAME}}
 
   build-credential-server-image:
-    desc: Build a container image that calls Gaia-X to generate the VP and serves it
+    desc: Build an image that serves the Gaia-X Self-Descriptions and refreshes the compliance proofs on startup
     cmds:
-      - docker build -f Dockerfile.server -t {{ .CREDENTIAL_SERVER_CONTAINER_NAME }} .
-      - printf '\n\nRun the container with:\n\ndocker run -it --rm -p 443:443 {{ .CREDENTIAL_SERVER_CONTAINER_NAME }}\n\n'
+      - docker build -f Dockerfile.server -t {{.CREDENTIAL_SERVER_IMAGE_NAME}} .
+      - |
+        printf 'Run the container with:\n\n'
+        printf 'docker run -it --rm -p 443:443 {{.CREDENTIAL_SERVER_IMAGE_NAME}}'
+
+  build-runner-image:
+    desc: Build a container image with all required dependencies to run the tasks
+    cmds:
+      - docker build -f {{.ROOT_DIR}}/Dockerfile -t {{.RUNNER_IMAGE_NAME}} {{.ROOT_DIR}}
+
+  build-show-runner-alias:
+    desc: Print a shell alias command for the task runner container
+    silent: true
+    deps:
+      - build-runner-image
+    vars:
+      VOLUMES:
+        - "{{.ROOT_DIR}}/.env:/app/.env"
+        - "{{.STATIC_ROOT}}:/app/htdocs"
+        - "{{.CERTS_DIR}}:/app/certs"
+        - "{{.ROOT_DIR}}:/out"
+      VOLUMES_ARGS:
+        sh: |
+          {{- range .VOLUMES }}
+          printf " -v '{{.}}'"
+          {{- end }}
+    cmds:
+      # Ensure the .env file exists
+      - test -f {{.ROOT_DIR}}/.env || touch {{.ROOT_DIR}}/.env
+      - printf "📋 Copy and paste the following command to create the alias:\n\n"
+      - printf "alias {{.RUNNER_ALIAS}}='docker run --rm -it -p 80:80 -p 443:443 {{.VOLUMES_ARGS}} {{.RUNNER_IMAGE_NAME}}'"

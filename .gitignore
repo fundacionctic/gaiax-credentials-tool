@@ -3,6 +3,7 @@
 
 certs
 htdocs
+*.tar
 
 ## Node
 #######

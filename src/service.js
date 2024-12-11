@@ -1,5 +1,5 @@
 import axios from "axios";
-import { promises as fs } from 'fs';
+import { promises as fs } from "fs";
 import { logger } from "./log.js";
 import { createProof, getProperty, sha256, writeFile } from "./utils.js";
 
@@ -105,12 +105,7 @@ export async function buildServiceOffering({
   const issuanceDate = new Date().toISOString();
 
   if (!termsConditionsHash) {
-    // const tcRes = await axios.get(termsConditionsUrl, {
-    //   responseType: "arraybuffer",
-    // });
-
-    const tcRes = await fs.readFile(termsConditionsPath, 'utf-8')
-
+    const tcRes = await fs.readFile(termsConditionsPath, "utf-8");
     termsConditionsHash = sha256(tcRes);
   }
 
